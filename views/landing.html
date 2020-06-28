@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translate</title>
+  <link rel="stylesheet" href="./mvp.css" />
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+</head>
+<body>
+   <main> 
+    <div style="text-align:center;"><h1>Voice Translator</h1></div>
+    <section>
+      <form id="landing">
+        <!-- <h1>Voice Translator</h1> -->
+        <button id="translate">Translate</button><br>
+        <button id="viewstatus">View status</button><br><br>
+        <a href="/sessionLogout">Log out</a>
+      </form>
+    </section>
+
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+          const translateBtn = document.getElementById("translate");
+          const viewstatusBtn = document.getElementById("viewstatus");
+
+          if (translateBtn.addEventListener) {
+            translateBtn
+            .addEventListener("click", (event) => {
+              event.preventDefault();
+              window.location.assign("/translate");
+              return false;
+            });
+          }
+
+          if (viewstatusBtn.addEventListener) {
+            viewstatusBtn
+            .addEventListener("click", (event) => {
+              event.preventDefault();
+              window.location.assign("/viewstatus");
+              return false;
+            });
+          }
+
+        });
+    </script>
+   </main>
+</body>
+</html>

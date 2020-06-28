@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload an audio/video file</title>
+    <link rel="stylesheet" href="./mvp.css" />
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+</head>
+<body>
+    <main>
+      <div style="text-align:center;"><h1>Voice Translator</h1></div>
+      <section>
+        <!-- <h1>Voice Translator</h1> -->
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+          <label for="srclang">Source Language:</label>
+          <select id="srclang" name="srclang" data-placeholder="Choose a Language...">
+            <option value="en-US">English</option>
+            <option value="te-IN">Telugu</option>
+          </select>
+          <label for="tgtlang">Target Language:</label>
+          <select id="tgtlang" name="tgtlang" data-placeholder="Choose a Language...">
+            <option value="en-US">English</option>
+            <option value="te-IN">Telugu</option>
+          </select><br>
+          <label for="file">Audio/ Video File Name:</label>
+          <input type="file" id="file" name="file"><br><br>
+          <button id="upload">Upload</button><br><br>
+          <a href="/sessionLogout">Log out</a>
+        </form>
+      </section>
+
+      <script>
+        window.addEventListener("DOMContentLoaded", () => {
+          
+          document
+            .getElementById("uploadForm")
+            .addEventListener("submit", (event) => {
+              event.preventDefault();
+              const srclang = document.getElementById("srclang").value;
+              const tgtlang = document.getElementById("tgtlang").value; 
+              const myFile = document.getElementById("file").files[0];
+              const fileName = myFile.name;
+              const fileSize = myFile.size;
+              const fileType = myFile.type;
+
+              const fData = {srclang, tgtlang, myFile, fileName, fileSize, fileType};
+
+              return fetch("/upload", {
+                method: "POST",
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                  "CSRF-Token": Cookies.get("XSRF-TOKEN")
+                },
+                body: JSON.stringify(fData)
+              })
+              .then(() => {
+                window.location.assign("/viewstatus");
+              });
+              return false;
+            });
+        });
+      </script>
+    </main>
+</body>
+</html>
