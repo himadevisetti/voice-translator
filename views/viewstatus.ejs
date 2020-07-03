@@ -12,26 +12,21 @@
     <div style="text-align:center;"><h1>Voice Translator</h1></div>
     <section>
       <form id="viewstatus" action="/viewstatus" method="get">
-        <div>
-        <!-- <h1>Voice Translator</h1> -->
-        <br><br>
-        <!-- Get status from firestore and display it -->
-        <p> Content goes here </p><br><br>
+        <button onclick="window.open('<%= translatedFile %>', '_blank');">Translated file</button><br>
         <button id="home">Home</button><br><br>
         <a href="/sessionLogout">Log out</a>
         <br><br>
-        </div>
       </form>
     </section>
 
       <script>
           window.addEventListener("DOMContentLoaded", () => {
-          document
-            .getElementById("home")
-            .addEventListener("click", (event) => {
-              event.preventDefault();
-              window.location.assign("/");
-              return false;
+            document
+              .getElementById("home")
+              .addEventListener("click", (event) => {
+                event.preventDefault();
+                window.location.assign("/landing");
+                return false;
             });
         });
       </script>
