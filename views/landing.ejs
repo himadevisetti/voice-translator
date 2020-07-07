@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Translate</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="./mvp.css" />
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 </head>
@@ -18,7 +19,7 @@
       <form id="landing">
         <!-- <h1>Voice Translator</h1> -->
         <button id="translate">Translate</button><br>
-        <button id="viewstatus">View status</button><br><br>
+        <button id="checkstatus">Check status</button><br><br>
         <a href="/sessionLogout">Log out</a>
       </form>
     </section>
@@ -35,10 +36,10 @@
           });
 
         document
-          .getElementById("viewstatus")
+          .getElementById("checkstatus")
           .addEventListener("click", (event) => {
             event.preventDefault();
-            window.location.assign("/viewstatus");
+            window.location.assign("/checkstatus");
             return false;
           });
 

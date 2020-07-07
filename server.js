@@ -7,6 +7,7 @@ const Multer = require("multer");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
 const firebase = require("firebase");
+const logger = require("./utils/logger.js"); 
 
 // Add the Firebase products
 require("firebase/firestore");
@@ -30,6 +31,7 @@ const firestore = new Firestore({
 });
 
 const serviceAccount = require("./serviceAccountKey.json");
+const { resolve } = require("path");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -146,9 +148,8 @@ app.get("/viewstatus", function (req, res) {
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
 
       const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
-      console.log("Output file url: " + publicOutputUrl);
 
-      checkStatus(outBucketName, outBlob);
+      checkFileProcessingStatus(outBucketName, outBlob);
       // replace id of the anchor tag to display a link to translated file
       res.render('viewstatus', { translatedFile: publicOutputUrl });
     })
@@ -156,6 +157,72 @@ app.get("/viewstatus", function (req, res) {
       res.redirect("/login");
     });
 });
+
+app.get("/checkstatus", function (req, res) {
+  const sessionCookie = req.cookies.session || "";
+  admin
+    .auth()
+    .verifySessionCookie(sessionCookie, true /** checkRevoked */)
+    .then(() => {
+      fetchResultFromDB().then(status => {
+        // replace id of the div tag to display status of files previously submitted by this user
+        res.render('checkstatus', { statusUpdate: status.trim().split("\n") });
+      })
+      .catch(err => {
+        console.log("No result returned from DB: " + err.message);
+        return err;
+      })
+      // replace id of the div tag to display status of files previously submitted by this user
+      // res.render('checkstatus', { statusUpdate: status });
+    })
+    .catch((error) => {
+      res.redirect("/login");
+    });
+});
+
+function fetchResultFromDB() {
+  return new Promise((resolve, reject) => {
+    console.log("username = " + global.username);
+    // download bucket
+    const outBucketName = `${outBucket.name}`;
+    const collection = firestore.collection('userdata');
+    var status = ""; 
+    // query the collection to fetch upto 5 files previously submitted by this user
+    collection.where('user_name', '==', `${global.username}`).limit(5).get().then(snap => {
+      size = snap.size; 
+      console.log("count of records: " + size); 
+      logger.info("count of records: " + size);
+      if (snap.empty) {
+        status = "No files were submitted for translation. Please upload file by clicking translate button";
+        resolve(status);
+      }
+
+      var count = 0; 
+      snap.forEach(doc => { 
+        // fetch file name from db record
+        const fileName = doc.data().file_name;
+        // download fileName
+        const outBlob = "Translated_" + path.parse(fileName).name + ".mp3";
+        const translatedFileAvailable = checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
+          count++;
+          if (fileAvailable === true) {
+            const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+            status += "\n" + publicOutputUrl;           
+          } else {
+            status += "\n" + fileName + " hasn't been processed for some reason. Please check after a few minutes";
+          }
+          if (count === size) { 
+            resolve(status);
+          }
+        });
+      }); 
+    })
+    .catch(err => {
+      console.log("DB Error: " + err.message);
+      reject(err);
+    })
+  })
+}
 
 // Process the file upload and upload to Google Cloud Storage.
 app.post("/upload", multer.single("file"), (req, res, next) => {
@@ -288,32 +355,33 @@ io.on('connection', (socketServer) => {
   });
 });
 
-async function checkStatus(bucketName, fileName) {
-  console.log("Checking status");
-  var file = googleCloudStorage.bucket(bucketName).file(fileName);
-  file.exists()
-    .then(exists => {
-      console.log("exists?: " + exists);
-      console.log("typeof exists: " + typeof exists);
-      console.log("exists[0]?: " + exists[0]);
-      if (exists[0] === true) {
-        console.log("File exists in the bucket: " + exists);
-      } else {
-        waitForFile(bucketName, fileName);
-      }
-    })
-    .catch(err => {
-      console.log("File cannot be accessed: " + err.message);
-      return err;
-    })
+function checkFileProcessingStatus(bucketName, fileName) {
+  return new Promise((resolve, reject) => {
+    console.log("Checking status");
+    var file = googleCloudStorage.bucket(bucketName).file(fileName);
+    file.exists()
+      .then(exists => {
+        if (exists[0] === true) {
+          resolve(exists[0]);
+        } else {
+          const fileStatus = waitForFile(bucketName, fileName).then(fStatus => {
+            resolve(fStatus);
+          });
+        }
+      })
+      .catch(err => {
+        console.log("File cannot be accessed: " + err.message);
+        reject(err);
+      })
+  })
 }
 
 async function waitForFile(bucketName, fileName) {
   let fileReady = null;
   let fileExists = false;
-  var keepGoing = true;
-  while (fileExists === false && keepGoing === true) {
-    // while(fileExists === false) {
+  // var keepGoing = true;
+  // while (fileExists === false && keepGoing === true) {
+  while(fileExists === false) {
     console.log("Waiting for file");
     const MAX_RETRIES = 2;
     for (let i = 0; i <= MAX_RETRIES; i++) {
@@ -328,10 +396,10 @@ async function waitForFile(bucketName, fileName) {
         console.log("File could not be processed: " + err.message);
         return err;
       })
-    setTimeout(function () {
-      // causing the following while loop to exit
-      keepGoing = false;
-    }, 30000); // 0.5 minute in milliseconds 
+    // setTimeout(function () {
+    //   // causing the following while loop to exit
+    //   keepGoing = false;
+    // }, 30000); // 0.5 minute in milliseconds 
   }
   return fileExists;
 }
