@@ -7,7 +7,11 @@ const Multer = require("multer");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
 const firebase = require("firebase");
-const logger = require("./utils/logger.js"); 
+const fs = require("fs-extra");
+const sox = require("sox");
+const util = require("util");
+const logger = require("./utils/logger.js");
+const soxUtils = require("./utils/sox-utils.js");
 
 // Add the Firebase products
 require("firebase/firestore");
@@ -56,10 +60,31 @@ app.use(csrfMiddleware);
 
 // Multer is required to process file uploads and make them available via
 // req.files.
+// const multer = Multer({
+//   // storage: Multer.memoryStorage()
+//   storage: Multer.memoryStorage(),
+//   limits: {
+//     fileSize: 10 * 1024 * 1024 // no larger than 10mb, change as needed
+//   }
+// });
+
 const multer = Multer({
-  storage: Multer.memoryStorage(),
+  // storage: Multer.memoryStorage()
+  storage: Multer.diskStorage({
+    destination: function (req, file, cb) {
+      var filepath = 'uploads/';
+      fs.mkdirsSync(filepath);
+      cb(null, filepath);
+    },
+
+    // By default, multer removes file extensions so let's add them back
+    filename: function (req, file, cb) {
+      // cb(null, file.fieldname + '-' + Date.now() + filepath.extname(file.originalname));
+      cb(null, file.originalname);
+    }
+  }),
   limits: {
-    fileSize: 5 * 1024 * 1024 // no larger than 5mb, you can change as needed
+    fileSize: 10 * 1024 * 1024 // no larger than 10mb, change as needed
   }
 });
 
@@ -146,8 +171,10 @@ app.get("/viewstatus", function (req, res) {
       const outBucketName = `${outBucket.name}`;
       // download fileName
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+      console.log("Output file name is: " + outBlob);
 
       const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+      console.log("publicOutputUrl: " + publicOutputUrl);
 
       checkFileProcessingStatus(outBucketName, outBlob);
       // replace id of the anchor tag to display a link to translated file
@@ -168,10 +195,10 @@ app.get("/checkstatus", function (req, res) {
         // replace id of the div tag to display status of files previously submitted by this user
         res.render('checkstatus', { statusUpdate: status.trim().split("\n") });
       })
-      .catch(err => {
-        console.log("No result returned from DB: " + err.message);
-        return err;
-      })
+        .catch(err => {
+          console.log("No result returned from DB: " + err.message);
+          return err;
+        })
       // replace id of the div tag to display status of files previously submitted by this user
       // res.render('checkstatus', { statusUpdate: status });
     })
@@ -186,19 +213,19 @@ function fetchResultFromDB() {
     // download bucket
     const outBucketName = `${outBucket.name}`;
     const collection = firestore.collection('userdata');
-    var status = ""; 
+    var status = "";
     // query the collection to fetch upto 5 files previously submitted by this user
     collection.where('user_name', '==', `${global.username}`).limit(5).get().then(snap => {
-      size = snap.size; 
-      console.log("count of records: " + size); 
+      size = snap.size;
+      console.log("count of records: " + size);
       logger.info("count of records: " + size);
       if (snap.empty) {
         status = "No files were submitted for translation. Please upload file by clicking translate button";
         resolve(status);
       }
 
-      var count = 0; 
-      snap.forEach(doc => { 
+      var count = 0;
+      snap.forEach(doc => {
         // fetch file name from db record
         const fileName = doc.data().file_name;
         // download fileName
@@ -207,20 +234,20 @@ function fetchResultFromDB() {
           count++;
           if (fileAvailable === true) {
             const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
-            status += "\n" + publicOutputUrl;           
+            status += "\n" + publicOutputUrl;
           } else {
             status += "\n" + fileName + " hasn't been processed for some reason. Please check after a few minutes";
           }
-          if (count === size) { 
+          if (count === size) {
             resolve(status);
           }
         });
-      }); 
+      });
     })
-    .catch(err => {
-      console.log("DB Error: " + err.message);
-      reject(err);
-    })
+      .catch(err => {
+        console.log("DB Error: " + err.message);
+        reject(err);
+      })
   })
 }
 
@@ -268,51 +295,53 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       var collection;
       var document;
 
-      async function writeToFirestore() {
+      soxUtils.getMetadata(req, function (data) {
+        async function writeToFirestore() {
 
-        // Obtain a document reference.
-        collection = firestore.collection('userdata');
-        document = collection.doc();
-        // const timestamp = admin.firestore.Timestamp.fromDate(new Date()); 
+          // Obtain a document reference.
+          collection = firestore.collection('userdata');
+          document = collection.doc();
 
-        // Enter new data into the document.
-        await document.set({
-          user_name: global.username,
+          // Enter new data into the document.
+          await document.set({
+            user_name: global.username,
+            source_language: req.body.srclang,
+            target_language: req.body.tgtlang,
+            bucket_name: `${bucket.name}`,
+            file_name: req.file.originalname,
+            public_url: `${publicUrl}`,
+            metadata: data,
+            created: new Date()
+          });
+        }
+
+        writeToFirestore().catch(console.error);
+
+        var response = {
           source_language: req.body.srclang,
           target_language: req.body.tgtlang,
           bucket_name: `${bucket.name}`,
           file_name: req.file.originalname,
           public_url: `${publicUrl}`,
-          created: new Date()
-        });
-
-      }
-
-      writeToFirestore().catch(console.error);
-
-      var response = {
-        source_language: req.body.srclang,
-        target_language: req.body.tgtlang,
-        bucket_name: `${bucket.name}`,
-        file_name: req.file.originalname,
-        public_url: `${publicUrl}`,
-        document_id: `${document.id}`
-      };
-      console.log("Source Language: " + response.source_language);
-      console.log("Target Language: " + response.target_language);
-      console.log("Bucket Name: " + response.bucket_name);
-      console.log("File Name: " + response.file_name);
-      console.log("Public Url: " + response.public_url);
-      console.log('Document Id:', response.document_id);
+          document_id: `${document.id}`
+        };
+        console.log("Source Language: " + response.source_language);
+        console.log("Target Language: " + response.target_language);
+        console.log("Bucket Name: " + response.bucket_name);
+        console.log("File Name: " + response.file_name);
+        console.log("Public Url: " + response.public_url);
+        console.log('Document Id:', response.document_id);
+      });
 
       response = {
         source_language: req.body.srclang,
         target_language: req.body.tgtlang,
-        message: `Success! File uploaded to ${publicUrl} and database updated with ${document.id}`
+        message: "Your file is being processed"
       };
-      res.end(JSON.stringify(response));
+      res.status(200).send(JSON.stringify(response));
     })
     .catch((error) => {
+      console.log("From upload endpoint " + error); 
       res.redirect("/login");
     });
 });
@@ -379,11 +408,13 @@ function checkFileProcessingStatus(bucketName, fileName) {
 async function waitForFile(bucketName, fileName) {
   let fileReady = null;
   let fileExists = false;
+  const MAX_RETRIES = 2;
+  let retryCount = 0;
   // var keepGoing = true;
   // while (fileExists === false && keepGoing === true) {
-  while(fileExists === false) {
+  while (fileExists === false && retryCount < MAX_RETRIES) {
+    retryCount++;
     console.log("Waiting for file");
-    const MAX_RETRIES = 2;
     for (let i = 0; i <= MAX_RETRIES; i++) {
       await wait(10000);
     }
@@ -411,4 +442,3 @@ function wait(timeout) {
     }, timeout);
   });
 }
-
