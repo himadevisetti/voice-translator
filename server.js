@@ -259,6 +259,8 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
+      // 10 minutes timeout just for POST to upload endpoint
+      req.socket.setTimeout(10 * 60 * 1000);
       // Create a new blob in the bucket and upload the file data.
       blob = bucket.file(req.file.originalname);
       global.inFile = `${blob.name}`;
@@ -290,7 +292,12 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         blob.makePublic();
       });
 
-      blobStream.end(req.file.buffer);
+      fs.readFile(req.file.path, (err, data) => {
+        if (err) {
+          throw err;
+         }
+        blobStream.end(data);
+      });
 
       var collection;
       var document;
