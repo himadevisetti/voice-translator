@@ -13,17 +13,19 @@
       <div style="text-align:center;"><h1>Voice Translator</h1></div>
       <section>
         <form id="checkstatus">
-          <h2>Status of your previously submitted files</h2>
-          <p id="status">
-            <% statusUpdate.forEach(result => { %>
-              <% var urlArray = result.split(/[\s/]+/); %>
-              <% var fileName = urlArray[urlArray.length-1]; %>
-              <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button><br>
-            <% }) %>
-          </p><br>
-          <button id="home">Home</button><br><br>
-          <a href="/sessionLogout">Log out</a>
-          <br><br>
+          <div class="buttonHolder">
+            <h2>Status of your previously submitted files</h2>
+            <p id="status">
+              <% statusUpdate.forEach(result => { %>
+                <% var urlArray = result.split(/[\s/]+/); %>
+                <% var fileName = urlArray[urlArray.length-1]; %>
+                <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button><br>
+              <% }) %>
+            </p><br>
+            <button id="home">Home</button><br><br>
+            <a href="/sessionLogout">Log out</a>
+            <br><br>
+          </div>
         </form>
       </section>
 

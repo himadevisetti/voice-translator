@@ -264,6 +264,7 @@ button {
   margin: 0.5rem 0;
   padding: 1rem 2rem;
   width: 250px;
+  word-wrap: break-word;
 }
 
 button {
@@ -318,6 +319,10 @@ input:disabled {
 
 button[disabled]:hover {
   filter: none;
+}
+
+.buttonHolder{ 
+  text-align: center; 
 }
 
 form {

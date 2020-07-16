@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,15 +8,36 @@
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="./mvp.css" />
 </head>
+
 <body>
-   <main>
-     <div style="text-align:center;"><h1>Voice Translator</h1></div> 
-     <section>
-       <form>
-         <p><h2>Your file is currently being processed</h2></p>
-         <a href="/sessionLogout">Log out</a>
-       </form>
-     </section>
-   </main>
+  <main>
+    <div style="text-align:center;">
+      <h1>Voice Translator</h1>
+    </div>
+    <section>
+      <form>
+        <div class="buttonHolder">
+          <p>
+          <h2>Your file is currently being processed</h2>
+          </p><br>
+          <button id="home">Home</button><br><br>
+          <a href="/sessionLogout">Log out</a>
+        </div>
+      </form>
+    </section>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("home")
+          .addEventListener("click", (event) => {
+            event.preventDefault();
+            window.location.assign("/landing");
+            return false;
+          });
+      });
+    </script>
+  </main>
 </body>
+
 </html>

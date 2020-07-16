@@ -100,8 +100,6 @@ global.username;
 // upload fileName
 global.inFile;
 
-var viewstatusHtml = "views/viewstatus.html";
-
 app.all("*", (req, res, next) => {
   res.cookie("XSRF-TOKEN", req.csrfToken());
   next();
@@ -167,16 +165,32 @@ app.get("/viewstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
+      // 2 minutes timeout just for GET to viewstatus endpoint
+      req.socket.setTimeout(2 * 60 * 1000);
       // download bucket
       const outBucketName = `${outBucket.name}`;
       // download fileName
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
-      console.log("Output file name is: " + outBlob);
+      console.log("Output file name is: " + outBlob);     
 
-      const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
-      console.log("publicOutputUrl: " + publicOutputUrl);
+      // publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+      // console.log("publicOutputUrl: " + publicOutputUrl);
 
-      checkFileProcessingStatus(outBucketName, outBlob);
+      var publicOutputUrl = ""; 
+      checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
+        console.log("File processing completed?: " + fileAvailable); 
+        if (fileAvailable === true) {
+          publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+          console.log("publicOutputUrl: " + publicOutputUrl);
+        } else {
+          publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
+        }
+      })
+
+      if (publicOutputUrl === "") {
+        publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
+      }
+      console.log("File processing status:" + publicOutputUrl); 
       // replace id of the anchor tag to display a link to translated file
       res.render('viewstatus', { translatedFile: publicOutputUrl });
     })
@@ -228,6 +242,7 @@ function fetchResultFromDB() {
       snap.forEach(doc => {
         // fetch file name from db record
         const fileName = doc.data().file_name;
+        logger.info(`${global.username}` + " previously submitted file: " + fileName); 
         // download fileName
         const outBlob = "Translated_" + path.parse(fileName).name + ".mp3";
         const translatedFileAvailable = checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
@@ -303,12 +318,15 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       var document;
 
       soxUtils.getMetadata(req, function (data) {
+
+        var err = JSON.stringify(data).includes("sampling rate was not specified"); 
+
+        // Obtain a document reference.
+        collection = firestore.collection('userdata');
+        document = collection.doc();
+
         async function writeToFirestore() {
-
-          // Obtain a document reference.
-          collection = firestore.collection('userdata');
-          document = collection.doc();
-
+          
           // Enter new data into the document.
           await document.set({
             user_name: global.username,
@@ -322,8 +340,26 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
           });
         }
 
-        writeToFirestore().catch(console.error);
+        async function writeToFirestoreNoHeader() {
+          
+          // Enter new data into the document.
+          await document.set({
+            user_name: global.username,
+            source_language: req.body.srclang,
+            target_language: req.body.tgtlang,
+            bucket_name: `${bucket.name}`,
+            file_name: req.file.originalname,
+            public_url: `${publicUrl}`,
+            created: new Date()
+          });
+        }
 
+        if (err) {
+          writeToFirestoreNoHeader().catch(console.error);
+        } else {
+          writeToFirestore().catch(console.error);
+        }
+        
         var response = {
           source_language: req.body.srclang,
           target_language: req.body.tgtlang,
