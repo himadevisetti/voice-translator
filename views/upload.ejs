@@ -47,7 +47,7 @@
 
             var xhr = new XMLHttpRequest();
             xhr.open('post', '/upload', true);
-            xhr.setRequestHeader("CSRF-Token", Cookies.get("XSRF-TOKEN")); 
+            xhr.setRequestHeader("CSRF-Token", Cookies.get("XSRF-TOKEN"));
             // xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.upload.onprogress = function (e) {
               if (e.lengthComputable) {
@@ -65,9 +65,14 @@
             };
 
             xhr.send(formData);
-            window.location.assign("/viewstatus");
-            return false; 
-            
+            xhr.onreadystatechange = function () {
+              if (xhr.readyState === 4) {
+                window.location.assign("/viewstatus");
+              }
+            }
+            // window.location.assign("/viewstatus");
+            return false;
+
           });
       }); 
     </script>

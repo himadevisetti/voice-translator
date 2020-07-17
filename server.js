@@ -165,20 +165,22 @@ app.get("/viewstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
+      console.log("File name uploaded for processing: " + global.inFile); 
+      logger.info("User " + global.username + " uploaded the file " + global.inFile);
       // 2 minutes timeout just for GET to viewstatus endpoint
       req.socket.setTimeout(2 * 60 * 1000);
       // download bucket
       const outBucketName = `${outBucket.name}`;
       // download fileName
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
-      console.log("Output file name is: " + outBlob);     
+      console.log("Output file name is: " + outBlob);
 
       // publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
       // console.log("publicOutputUrl: " + publicOutputUrl);
 
-      var publicOutputUrl = ""; 
+      var publicOutputUrl = "";
       checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
-        console.log("File processing completed?: " + fileAvailable); 
+        console.log("File processing completed?: " + fileAvailable);
         if (fileAvailable === true) {
           publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
           console.log("publicOutputUrl: " + publicOutputUrl);
@@ -190,7 +192,7 @@ app.get("/viewstatus", function (req, res) {
       if (publicOutputUrl === "") {
         publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
       }
-      console.log("File processing status:" + publicOutputUrl); 
+      console.log("File processing status:" + publicOutputUrl);
       // replace id of the anchor tag to display a link to translated file
       res.render('viewstatus', { translatedFile: publicOutputUrl });
     })
@@ -205,12 +207,14 @@ app.get("/checkstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
+      logger.info("User " + global.username + " checked the status");
       fetchResultFromDB().then(status => {
         // replace id of the div tag to display status of files previously submitted by this user
         res.render('checkstatus', { statusUpdate: status.trim().split("\n") });
       })
         .catch(err => {
           console.log("No result returned from DB: " + err.message);
+          logger.info("No result returned from DB: " + err.message);
           return err;
         })
       // replace id of the div tag to display status of files previously submitted by this user
@@ -231,8 +235,7 @@ function fetchResultFromDB() {
     // query the collection to fetch upto 5 files previously submitted by this user
     collection.where('user_name', '==', `${global.username}`).limit(5).get().then(snap => {
       size = snap.size;
-      console.log("count of records: " + size);
-      logger.info("count of records: " + size);
+      logger.info("Count of records for user " + global.username + " is: " + size);
       if (snap.empty) {
         status = "No files were submitted for translation. Please upload file by clicking translate button";
         resolve(status);
@@ -242,7 +245,7 @@ function fetchResultFromDB() {
       snap.forEach(doc => {
         // fetch file name from db record
         const fileName = doc.data().file_name;
-        logger.info(`${global.username}` + " previously submitted file: " + fileName); 
+        logger.info(`${global.username}` + " previously submitted file: " + fileName);
         // download fileName
         const outBlob = "Translated_" + path.parse(fileName).name + ".mp3";
         const translatedFileAvailable = checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
@@ -261,6 +264,7 @@ function fetchResultFromDB() {
     })
       .catch(err => {
         console.log("DB Error: " + err.message);
+        logger.info("DB Error: " + err.message);
         reject(err);
       })
   })
@@ -309,8 +313,9 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 
       fs.readFile(req.file.path, (err, data) => {
         if (err) {
+          logger.info("Error while reading the uploaded file: " + err);
           throw err;
-         }
+        }
         blobStream.end(data);
       });
 
@@ -319,14 +324,14 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 
       soxUtils.getMetadata(req, function (data) {
 
-        var err = JSON.stringify(data).includes("sampling rate was not specified"); 
+        var err = JSON.stringify(data).includes("sampling rate was not specified");
 
         // Obtain a document reference.
         collection = firestore.collection('userdata');
         document = collection.doc();
 
         async function writeToFirestore() {
-          
+
           // Enter new data into the document.
           await document.set({
             user_name: global.username,
@@ -341,7 +346,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         }
 
         async function writeToFirestoreNoHeader() {
-          
+
           // Enter new data into the document.
           await document.set({
             user_name: global.username,
@@ -359,7 +364,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         } else {
           writeToFirestore().catch(console.error);
         }
-        
+
         var response = {
           source_language: req.body.srclang,
           target_language: req.body.tgtlang,
@@ -374,6 +379,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         console.log("File Name: " + response.file_name);
         console.log("Public Url: " + response.public_url);
         console.log('Document Id:', response.document_id);
+        logger.info("User " + global.username + " has uploaded " + global.inFile + " and firestore document_id is: " + response.document_id);
       });
 
       response = {
@@ -384,7 +390,8 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       res.status(200).send(JSON.stringify(response));
     })
     .catch((error) => {
-      console.log("From upload endpoint " + error); 
+      console.log("From upload endpoint " + error);
+      logger.info("From upload endpoint " + error);
       res.redirect("/login");
     });
 });
@@ -393,6 +400,7 @@ app.post("/sessionLogin", (req, res) => {
   const idToken = req.body.idToken.toString();
   global.username = req.body.login.toString();
   console.log("Logged in as: " + global.username);
+  logger.info("Logged in as: " + global.username);
 
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
@@ -406,6 +414,7 @@ app.post("/sessionLogin", (req, res) => {
         res.end(JSON.stringify({ status: "success" }));
       },
       (error) => {
+        logger.info("From login endpoint " + error);
         res.status(401).send("UNAUTHORIZED REQUEST!");
       }
     );
@@ -443,6 +452,7 @@ function checkFileProcessingStatus(bucketName, fileName) {
       })
       .catch(err => {
         console.log("File cannot be accessed: " + err.message);
+        logger.info("File cannot be accessed: " + err.message);
         reject(err);
       })
   })
@@ -464,10 +474,12 @@ async function waitForFile(bucketName, fileName) {
     fileReady = googleCloudStorage.bucket(bucketName).file(fileName);
     fileReady.exists().then((fileProcessed) => {
       console.log("File processing completed: " + fileProcessed[0]);
+      logger.info("File processing completed: " + fileProcessed[0]);
       fileExists = fileProcessed[0];
     })
       .catch(err => {
         console.log("File could not be processed: " + err.message);
+        logger.info("File could not be processed: " + err.message);
         return err;
       })
     // setTimeout(function () {
