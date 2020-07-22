@@ -141,6 +141,7 @@ app.get("/landing", function (req, res) {
       res.render("landing");
     })
     .catch((error) => {
+      logger.info("Could not render landing page due to " + error);
       res.redirect("/login");
     });
 });
@@ -155,6 +156,7 @@ app.get("/translate", function (req, res) {
       res.render("upload");
     })
     .catch((error) => {
+      logger.info("Could not render upload page due to " + error);
       res.redirect("/login");
     });
 });
@@ -165,7 +167,7 @@ app.get("/viewstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
-      console.log("File name uploaded for processing: " + global.inFile); 
+      console.log("File name uploaded for processing: " + global.inFile);
       logger.info("User " + global.username + " uploaded the file " + global.inFile);
       // 2 minutes timeout just for GET to viewstatus endpoint
       req.socket.setTimeout(2 * 60 * 1000);
@@ -197,6 +199,7 @@ app.get("/viewstatus", function (req, res) {
       res.render('viewstatus', { translatedFile: publicOutputUrl });
     })
     .catch((error) => {
+      logger.info("Could not render viewstatus page due to " + error);
       res.redirect("/login");
     });
 });
@@ -221,6 +224,7 @@ app.get("/checkstatus", function (req, res) {
       // res.render('checkstatus', { statusUpdate: status });
     })
     .catch((error) => {
+      logger.info("Could not render checkstatus page due to " + error);
       res.redirect("/login");
     });
 });

@@ -1,44 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-signin-client_id"
+    content="753356494760-74fh1dbi0tpkkifv1vee1v7u00jbf341.apps.googleusercontent.com">
+  <meta name="google-signin-cookiepolicy" content="single_host_origin">
+  <meta name="google-signin-scope" content="profile email">
   <title>Voice Translator</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="./mvp.css" />
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
+  <script src="https://apis.google.com/js/platform.js"></script>
+  <script src="./init-firebase.js"></script>
 </head>
+
 <body>
-   <main> 
-     <div style="text-align:center;"><h1>Voice Translator</h1></div>
-     <section>
-       <form>
+  <main>
+    <div style="text-align:center;">
+      <h1>Voice Translator</h1>
+    </div>
+    <section>
+      <form>
         <div class="buttonHolder">
           <button id="login">Log in</button><br>
-          <button id="signup">Sign up</button>
+          <button id="signup">Sign up</button><br>
         </div>
-       </form>
-     </section>
+        <br>
+        <h2>Login with Social Media</h2>
+        <!-- <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div> -->
+        <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+      </form>
+    </section>
 
-     <script>
-       window.addEventListener("DOMContentLoaded", () => {
-         
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+
         document.getElementById("login")
           .addEventListener("click", (event) => {
             event.preventDefault();
             window.location.assign("/landing");
             return false;
-        });
+          });
 
         document.getElementById("signup")
           .addEventListener("click", (event) => {
             event.preventDefault();
             window.location.assign("/signup");
             return false;
+          });
+
+      });
+
+      function onSignIn(googleUser) {
+        console.log('Google Auth Response', googleUser);
+        // We need to register an Observer on Firebase Auth to make sure auth is initialized.
+        var unsubscribe = firebase.auth().onAuthStateChanged(function (firebaseUser) {
+          unsubscribe();
+          // Check if we are already signed-in Firebase with the correct user.
+          if (!isUserEqual(googleUser, firebaseUser)) {
+            // Get the idToken
+            var idToken = googleUser.getAuthResponse().id_token;
+            // Build Firebase credential with the Google ID token.
+            var credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+            // Sign in with credential from the Google user.
+            firebase.auth().signInWithCredential(credential)
+              .then((result) => {
+                console.log("signed in with credential");
+                createSession(googleUser); 
+              });
+          } else {
+            console.log('User already signed-in Firebase.');
+            createSession(firebaseUser);
+          }
         });
+      }
 
-       });
-     </script>
+      function isUserEqual(googleUser, firebaseUser) {
+        if (firebaseUser) {
+          var providerData = firebaseUser.providerData;
+          for (var i = 0; i < providerData.length; i++) {
+            if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
+              providerData[i].uid === googleUser.getBasicProfile().getId()) {
+              // We don't need to reauth the Firebase connection.
+              return true;
+            }
+          }
+        }
+        return false;
+      }
 
-   </main>
+      function getCookie(name) {
+        const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
+      }
+
+      function createSession(user) {
+        // Get Google user email from profile
+        var profile = user.getBasicProfile();
+        var login = profile.getEmail();
+
+        // var csrf_token = Cookies.get("XSRF-TOKEN");
+        var csrf_token = getCookie("XSRF-TOKEN");
+
+        return firebase.auth().currentUser.getIdToken()
+          .then(function (idToken) {
+            return fetch("/sessionLogin", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                "CSRF-Token": csrf_token,
+              },
+              body: JSON.stringify({ idToken, login }),
+            });
+          })
+          .then(() => {
+            return firebase.auth().signOut();
+          })
+          .then(() => {
+            window.location.assign("/landing");
+          })
+          .catch(function (error) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            // The email of the user's account used.
+            var email = error.email;
+            // The firebase.auth.AuthCredential type that was used.
+            var credential = error.credential;
+            // ...
+          });
+      }
+
+    </script>
+
+  </main>
 </body>
+
 </html>

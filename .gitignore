@@ -27,3 +27,6 @@ out/
 *key.json
 *.lock
 **/package-lock.json
+
+# folder where user files are uploaded
+uploads/

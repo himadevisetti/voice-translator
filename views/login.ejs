@@ -1,79 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head profile="http://www.w3.org/2005/10/profile">
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Log in page</title>
-    <link rel="icon" href="/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="./mvp.css" />
-    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js" defer ></script>
-    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js" defer ></script>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js" defer ></script>
-  </head>
-  <body>
-    <main>
-      <div style="text-align:center;"><h1>Voice Translator</h1></div>
-      <section>
-        <form id="login">
-            <label>Login</label>
-            <input type="text" name="login" />
-            <label>Password</label>
-            <input type="password" name="password" />
-            <div class="buttonHolder">
-              <button>Log in</button>
-            </div>
-        </form>
-      </section>
 
-      <script>
-        window.addEventListener("DOMContentLoaded", () => {
-          const firebaseConfig = {
-            apiKey: "AIzaSyDi3jGcbaMFP8TfeunoWPTYnhKwkco4C1A",
-            authDomain: "teak-mantis-279104.firebaseapp.com",
-            databaseURL: "https://teak-mantis-279104.firebaseio.com",
-            projectId: "teak-mantis-279104",
-            storageBucket: "teak-mantis-279104.appspot.com",
-            messagingSenderId: "753356494760",
-            appId: "1:753356494760:web:aa010cec6094c6b0f1af9d"
-          };
+<head profile="http://www.w3.org/2005/10/profile">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in page</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="./mvp.css" />
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js" defer></script>
+</head>
 
-          firebase.initializeApp(firebaseConfig);
+<body>
+  <main>
+    <div style="text-align:center;">
+      <h1>Voice Translator</h1>
+    </div>
+    <section>
+      <form id="login">
+        <label>Login</label>
+        <input type="text" name="login" />
+        <label>Password</label>
+        <input type="password" name="password" />
+        <div class="buttonHolder">
+          <button>Log in</button>
+        </div>
+      </form>
+    </section>
 
-          firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const firebaseConfig = {
+          apiKey: "AIzaSyDi3jGcbaMFP8TfeunoWPTYnhKwkco4C1A",
+          authDomain: "teak-mantis-279104.firebaseapp.com",
+          databaseURL: "https://teak-mantis-279104.firebaseio.com",
+          projectId: "teak-mantis-279104",
+          storageBucket: "teak-mantis-279104.appspot.com",
+          messagingSenderId: "753356494760",
+          appId: "1:753356494760:web:aa010cec6094c6b0f1af9d"
+        };
 
-          document
-            .getElementById("login")
-            .addEventListener("submit", (event) => {
-              event.preventDefault();
-              const login = event.target.login.value;
-              const password = event.target.password.value;
+        firebase.initializeApp(firebaseConfig);
 
-              firebase
-                .auth()
-                .signInWithEmailAndPassword(login, password)
-                .then(({ user }) => {
-                  return user.getIdToken().then((idToken) => {
-                    return fetch("/sessionLogin", {
-                      method: "POST",
-                      headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                        "CSRF-Token": Cookies.get("XSRF-TOKEN"),
-                      },
-                      body: JSON.stringify({ idToken, login }),
-                    });
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+
+        document
+          .getElementById("login")
+          .addEventListener("submit", (event) => {
+            event.preventDefault();
+            const login = event.target.login.value;
+            const password = event.target.password.value;
+
+            firebase
+              .auth()
+              .signInWithEmailAndPassword(login, password)
+              .then(({ user }) => {
+                return user.getIdToken().then((idToken) => {
+                  return fetch("/sessionLogin", {
+                    method: "POST",
+                    headers: {
+                      Accept: "application/json",
+                      "Content-Type": "application/json",
+                      "CSRF-Token": Cookies.get("XSRF-TOKEN"),
+                    },
+                    body: JSON.stringify({ idToken, login }),
                   });
-                })
-                .then(() => {
-                  return firebase.auth().signOut();
-                })
-                .then(() => {
-                  window.location.assign("/landing");
                 });
-              return false;
-            });
-        });
-      </script>
-    </main>
-  </body>
+              })
+              .then(() => {
+                return firebase.auth().signOut();
+              })
+              .then(() => {
+                window.location.assign("/landing");
+              });
+            return false;
+          });
+      });
+    </script>
+  </main>
+</body>
+
 </html>
