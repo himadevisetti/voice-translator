@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js" defer></script>
+  <script src="./init-firebase.js" defer></script>
 </head>
 
 <body>
@@ -31,19 +32,6 @@
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {
-        const firebaseConfig = {
-          apiKey: "AIzaSyDi3jGcbaMFP8TfeunoWPTYnhKwkco4C1A",
-          authDomain: "teak-mantis-279104.firebaseapp.com",
-          databaseURL: "https://teak-mantis-279104.firebaseio.com",
-          projectId: "teak-mantis-279104",
-          storageBucket: "teak-mantis-279104.appspot.com",
-          messagingSenderId: "753356494760",
-          appId: "1:753356494760:web:aa010cec6094c6b0f1af9d"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-
-        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
 
         document
           .getElementById("login")
