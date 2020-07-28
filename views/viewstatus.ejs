@@ -12,7 +12,7 @@
 
 <body>
   <main>
-    <div style="text-align:center;">
+    <!-- <div style="text-align:center;">
       <h1>Voice Translator</h1>
     </div>
     <section>
@@ -28,7 +28,29 @@
           <br><br>
         </div>
       </form>
-    </section>
+    </section> -->
+
+    <div class="parent">
+      <div class="header">
+        <h1 class="centertext">Voice Translator</h1>
+      </div>
+      <div class="leftnav"> </div>
+      <div class="maincontent">
+        <form id="viewstatus" action="/viewstatus" method="get">
+          <p id="status">
+            <% if(translatedFile.includes("is currently being processed")) { %>
+              <p><%= translatedFile %></p>
+            <% } else { %>
+              <button onclick="window.open('<%= translatedFile %>', '_blank');">Translated file</button><br>
+            <% } %>
+          </p><br>
+          <button id="home">Home</button><br>
+          <a class="linktext" href="/sessionLogout">Log out</a>
+        </form>
+      </div>
+      <div class="rightnav"> </div>
+      <div class="footer"> </div>
+    </div>
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {

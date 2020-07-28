@@ -1,46 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Check status</title>
-    <link rel="icon" href="/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="./mvp.css" />
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
-  </head>
-  <body>
-    <main>
-      <div style="text-align:center;"><h1>Voice Translator</h1></div>
-      <section>
-        <form id="checkstatus">
-          <div class="buttonHolder">
-            <h2>Status of your previously submitted files</h2>
-            <p id="status">
-              <% statusUpdate.forEach(result => { %>
-                <% var urlArray = result.split(/[\s/]+/); %>
-                <% var fileName = urlArray[urlArray.length-1]; %>
-                <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button><br>
-              <% }) %>
-            </p><br>
-            <button id="home">Home</button><br><br>
-            <a href="/sessionLogout">Log out</a>
-            <br><br>
-          </div>
-        </form>
-      </section>
 
-      <script>
-        window.addEventListener("DOMContentLoaded", () => {
-          
-          document
-            .getElementById("home")
-            .addEventListener("click", (event) => {
-              event.preventDefault();
-              window.location.assign("/landing");
-              return false;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check status</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="./mvp.css" />
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+  <main>
+    <div class="parent">
+      <div class="header">
+        <h1 class="centertext">Voice Translator</h1>
+      </div>
+      <div class="leftnav"> </div>
+      <div class="maincontent">
+        <form id="checkstatus">
+          <h4 class="centertext">Status of your previously submitted files</h4>
+          <p id="status">
+            <% statusUpdate.forEach(result => { %>
+            <% var urlArray = result.split(/[\s/]+/); %>
+            <% var fileName = urlArray[urlArray.length-1]; %>
+            <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button>
+            <% }) %>
+          </p><br>
+          <button id="home">Home</button>
+          <a class="linktext" href="/sessionLogout">Log out</a>
+        </form>
+      </div>
+      <div class="rightnav"> </div>
+      <div class="footer"> </div>
+    </div>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+
+        document
+          .getElementById("home")
+          .addEventListener("click", (event) => {
+            event.preventDefault();
+            window.location.assign("/landing");
+            return false;
           });
-        });
-      </script>
-    </main>
-  </body>
+      });
+    </script>
+  </main>
+</body>
+
 </html>

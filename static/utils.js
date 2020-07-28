@@ -78,3 +78,19 @@ function createSession(user) {
             // ...
         });
 }
+
+function loginError(error) {
+
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    if (errorCode === 'auth/wrong-password') {
+        // alert('Wrong password.');
+        errorPassword.innerHTML = "Wrong password.";
+        document.getElementById('password').focus();
+    } else {
+        // alert(errorMessage);
+        errorPassword.innerHTML = errorMessage;
+    }
+    // window.location.assign("/login");
+
+}

@@ -20,21 +20,24 @@
 
 <body>
   <main>
-    <div style="text-align:center;">
-      <h1>Voice Translator</h1>
-    </div>
-    <section>
-      <form>
-        <div class="buttonHolder">
-          <button id="login">Log in</button><br>
+    <div class="parent">
+      <div class="header">
+        <h1 class="centertext">Voice Translator</h1>
+      </div>
+      <div class="leftnav"> </div>
+      <div class="maincontent">
+        <form id="index">
+          <button id="login">Log in</button>
           <button id="signup">Sign up</button><br>
-        </div>
-        <br>
-        <h2>Login with Social Media</h2>
-        <!-- <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div> -->
-        <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
-      </form>
-    </section>
+          <hr class="divider" />
+          <div class="centertext txt2">or Login with Social Media</div><br><br>
+          <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
+          </div>
+        </form>
+      </div>
+      <div class="rightnav"> </div>
+      <div class="footer"> </div>
+    </div>
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {

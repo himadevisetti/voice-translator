@@ -106,7 +106,8 @@ app.all("*", (req, res, next) => {
 });
 
 app.get("/", function (req, res) {
-  res.render("index");
+  // res.render("index");
+  res.render("login");
 });
 
 app.get("/login", function (req, res) {
@@ -117,19 +118,23 @@ app.get("/signup", function (req, res) {
   res.render("signup");
 });
 
-app.get("/home", function (req, res) {
-  const sessionCookie = req.cookies.session || "";
-
-  admin
-    .auth()
-    .verifySessionCookie(sessionCookie, true /** checkRevoked */)
-    .then(() => {
-      res.render("home");
-    })
-    .catch((error) => {
-      res.redirect("/login");
-    });
+app.get("/passwordReset", function (req, res) {
+  res.render("passwordreset");
 });
+
+// app.get("/home", function (req, res) {
+//   const sessionCookie = req.cookies.session || "";
+
+//   admin
+//     .auth()
+//     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
+//     .then(() => {
+//       res.render("home");
+//     })
+//     .catch((error) => {
+//       res.redirect("/login");
+//     });
+// });
 
 app.get("/landing", function (req, res) {
   const sessionCookie = req.cookies.session || "";
@@ -438,6 +443,37 @@ io.on('connection', (socketServer) => {
   socketServer.on('npmStop', () => {
     process.exit(0);
   });
+});
+
+app.post("/updatePassword", (req, res) => {
+  global.username = req.body.login.toString();
+  console.log("Logged in as: " + global.username);
+  logger.info("Logged in as: " + global.username);
+  const pwd = req.body.password.toString();
+
+  admin.auth().getUserByEmail(global.username)
+    .then(function (userRecord) {
+
+      var uid = userRecord.uid;
+      // See the UserRecord reference doc for the contents of userRecord.
+      console.log('Successfully fetched user data: ' + uid);
+      // var user = admin.auth().getUser(uid);
+
+      admin.auth().updateUser(uid, {
+        password: pwd,
+      })
+        .then(function (userRecord) {
+          console.log('Successfully updated password for user: ' + JSON.stringify(userRecord.email));
+        })
+        .catch(function (error) {
+          console.log("Error occured during password reset. " + error);
+        });
+        res.status(200).send("Password was updated successfully.");
+    })
+    .catch(function (error) {
+      console.log("Error fetching user data: " + error);
+    });
+
 });
 
 function checkFileProcessingStatus(bucketName, fileName) {

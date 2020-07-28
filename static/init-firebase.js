@@ -1,4 +1,4 @@
-// Your web app's Firebase configuration
+// My web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDi3jGcbaMFP8TfeunoWPTYnhKwkco4C1A",
     authDomain: "teak-mantis-279104.firebaseapp.com",

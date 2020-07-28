@@ -53,7 +53,7 @@ body {
   line-height: var(--line-height);
   margin: 0;
   overflow-x: hidden;
-  padding: 1rem 0;
+  padding: 0; 
 }
 
 footer,
@@ -257,19 +257,21 @@ a i,
 a strong,
 button {
   border-radius: var(--border-radius);
-  display: inline-block;
+  display: block;
   font-size: medium;
   font-weight: bold;
   line-height: var(--line-height);
   margin: 0.5rem 0;
   padding: 1rem 2rem;
-  width: 250px;
+  width: 100%;
   word-wrap: break-word;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-button {
+/* button {
   font-family: var(--font);
-}
+} */
 
 button:hover {
   cursor: pointer;
@@ -307,7 +309,49 @@ figure figcaption {
   color: var(--color-text-secondary);
 }
 
+.forgot {
+  color: #5DADE2;
+  line-height: .5em;
+  top: 2.5em;
+  text-decoration: none;
+  font-size: .90em;
+  margin:0;
+  padding: 0;
+  float: right;
+}
+
+.noaccount {
+  color: #5DADE2;
+  line-height: .5em;
+  top: 2.5em;
+  text-decoration: none;
+  font-size: .90em;
+  margin:0;
+  padding: 0;
+  width: 100%; 
+  text-align:center;
+}
+
+.linktext {
+  line-height: .5em;
+  top: 2.5em;
+  text-decoration: none;
+  font-size: .90em;
+  margin:0;
+  padding: 0;
+  width: 100%; 
+  text-align:center;
+}
+
+hr.divider { 
+  margin: 1em;
+} 
+
 /* Forms */
+
+* {
+  box-sizing: border-box;
+} 
 
 button:disabled,
 input:disabled {
@@ -321,8 +365,40 @@ button[disabled]:hover {
   filter: none;
 }
 
-.buttonHolder{ 
-  text-align: center; 
+.buttonHolder { 
+  text-align:center; 
+}
+
+.block {
+  display: block;
+  width: 100%;
+  border: none;
+  background-color: #4CAF50;
+  padding: 14px 28px;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.cellContainer {
+  width: 100%;
+  height: auto; 
+  /* float: left; */
+}
+
+.centertext {
+  text-align: center;  
+  display: inline-block;
+  position: relative;
+  width: 100%;
+}
+
+/* div {
+  display: inline-block;
+} */
+
+div label {
+  display: block;
 }
 
 form {
@@ -363,13 +439,31 @@ input[type="radio"]+label {
   top: 1px;
 }
 
-input,
+input[type="text"],
+input[type="password"],
 select,
 textarea {
   border: 1px solid var(--color-bg-secondary);
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
   padding: 0.4rem 0.8rem;
+  width: 100%;
+}
+
+span {
+  font-family: var(--font);
+}
+
+span.error {
+  color: red;
+}
+
+.error {
+  color: red;
+}
+
+.status {
+  color: darkgreen;
 }
 
 input[readonly],
@@ -441,3 +535,114 @@ blockquote footer {
 }
 
 /* Custom styles */
+
+.parent {
+  display: grid;
+  grid-template-columns: 300px 1fr 1fr 300px;
+  grid-template-rows: 100px 1fr 50px;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+  height: 100vh;
+}
+
+.header {
+  grid-area: 1 / 1 / 2 / 5;
+}
+
+.leftnav {
+  grid-area: 2 / 1 / 3 / 2;
+}
+
+.maincontent {
+  grid-area: 2 / 2 / 3 / 4;
+}
+
+.rightnav {
+  grid-area: 2 / 4 / 3 / 5;
+}
+
+.footer {
+  grid-area: 3 / 1 / 4 / 5;
+}
+
+/* .fa {
+  padding: 20px;
+  font-size: 30px;
+  width: 50px;
+  text-align: center;
+  text-decoration: none;
+  margin: 5px 2px;
+}
+
+.fa:hover {
+    opacity: 0.7;
+}
+
+.fa-google {
+  background: #dd4b39;
+  color: white;
+} */
+
+/* .btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  margin: 5px 0;
+  opacity: 0.85;
+  display: inline-block;
+  font-size: 17px;
+  line-height: 20px;
+  text-decoration: none;  
+}
+
+.google {
+  background-color: #dd4b39;
+  color: white;
+} */
+
+.txt2 {
+  /* font-family: Geneva-Regular; */
+  font-size: 15px;
+  color: #999;
+  line-height: .5em;
+  text-decoration: none;
+  margin:0;
+  padding: 0;
+}
+
+#customGoogleBtn {
+  display: inline-block;
+  background: white;
+  color: #444;
+  width: 100%;
+  border-radius: 5px;
+  border: thin solid #888;
+  box-shadow: 1px 1px 1px grey;
+  white-space: nowrap;
+}
+#customGoogleBtn:hover {
+  cursor: pointer;
+}
+span.label {
+  font-family: serif;
+  font-weight: normal;
+}
+span.icon {
+  background: url('g-normal.png') transparent 50% no-repeat;
+  display: inline-block;
+  vertical-align: middle;
+  width: 42px;
+  height: 42px;
+}
+span.buttonText {
+  display: inline-block;
+  vertical-align: middle;
+  padding-left: 65px;
+  padding-right: 42px;
+  font-size: 14px;
+  font-weight: bold;
+  /* Use the Roboto font that is loaded in the <head> */
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+}

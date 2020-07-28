@@ -12,18 +12,21 @@
 
 <body>
   <main>
-    <div style="text-align:center;">
-      <h1>Voice Translator</h1>
+    <div class="parent">
+      <div class="header">
+        <h1 class="centertext">Voice Translator</h1>
+      </div>
+      <div class="leftnav"> </div>
+      <div class="maincontent">
+        <form id="landing">
+          <button id="translate">Translate</button>
+          <button id="checkstatus">Check status</button><br>
+          <a class="linktext" href="/sessionLogout">Log out</a>
+        </form>
+      </div>
+      <div class="rightnav"> </div>
+      <div class="footer"> </div>
     </div>
-    <section>
-      <form id="landing">
-        <div class="buttonHolder">
-          <button id="translate">Translate</button><br>
-          <button id="checkstatus">Check status</button><br><br>
-          <a href="/sessionLogout">Log out</a>
-        </div>
-      </form>
-    </section>
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {

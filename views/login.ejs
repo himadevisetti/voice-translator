@@ -4,37 +4,65 @@
 <head profile="http://www.w3.org/2005/10/profile">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-signin-client_id"
+    content="753356494760-74fh1dbi0tpkkifv1vee1v7u00jbf341.apps.googleusercontent.com">
+  <meta name="google-signin-cookiepolicy" content="single_host_origin">
+  <meta name="google-signin-scope" content="profile email">
   <title>Log in page</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="./mvp.css" />
-  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js" defer></script>
-  <script src="./init-firebase.js" defer></script>
+  <!-- <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css"> -->
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+  <!-- <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css"> -->
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
+  <script src="https://apis.google.com/js/platform.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+  <script src="./init-firebase.js"></script>
+  <script src="./utils.js" charset="UTF-8"></script>
 </head>
 
 <body>
   <main>
-    <div style="text-align:center;">
-      <h1>Voice Translator</h1>
-    </div>
-    <section>
-      <form id="login">
-        <label>Login</label>
-        <input type="text" name="login" />
-        <label>Password</label>
-        <input type="password" name="password" />
-        <div class="buttonHolder">
+    <div class="parent">
+      <div class="header">
+        <h1 class="centertext">Voice Translator</h1>
+      </div>
+      <div class="leftnav"> </div>
+      <div class="maincontent">
+        <form id="loginForm">
+          <input type="text" placeholder="Enter Email" name="login" id="login" required><span class="error"
+            id="errorEmail"></span>
+          <input type="password" placeholder="Enter Password" name="password" id="password" required><span class="error"
+            id="errorPassword"></span><br>
+          <a class="forgot" href="/passwordReset">Forgot password?</a><br>
           <button>Log in</button>
-        </div>
-      </form>
-    </section>
+          <a class="noaccount" href="/signup">Don't have an account? Sign up!</a><br>
+          <hr class="divider" />
+          <div class="centertext txt2">or Login with Social Media</div><br><br>
+          <!-- <a href="#" id="googleSignIn" class="google btn" data-onsuccess="onSignIn" data-theme="dark">
+            <i class="fa fa-google fa-fw"></i>
+            Sign in with Google
+          </a> -->
+          <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
+          </div>
+          <!-- <div id="customGoogleBtn" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
+            <span class="icon"></span>
+            <span class="buttonText">Sign in with Google</span>
+          </div>
+          <div id="name"></div>
+          <script>onSignIn();</script> -->
+        </form>
+      </div>
+      <div class="rightnav"> </div>
+      <div class="footer"> </div>
+    </div>
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {
 
         document
-          .getElementById("login")
+          .getElementById("loginForm")
           .addEventListener("submit", (event) => {
             event.preventDefault();
             const login = event.target.login.value;
@@ -61,6 +89,9 @@
               })
               .then(() => {
                 window.location.assign("/landing");
+              })
+              .catch((error) => {
+                loginError(error);
               });
             return false;
           });
