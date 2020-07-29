@@ -21,10 +21,15 @@
         <form id="checkstatus">
           <h4 class="centertext">Status of your previously submitted files</h4>
           <p id="status">
+            <!-- result is a list of URLs each one on a new line with the following format -->
+            <!-- https://storage.cloud.google.com/cool_place/Translated_commercial_stereo.mp3 -->
             <% statusUpdate.forEach(result => { %>
+            <!-- create an array by splitting the URL string using '/' -->
             <% var urlArray = result.split(/[\s/]+/); %>
+            <!-- extract the file name which is at the last index of the array -->
             <% var fileName = urlArray[urlArray.length-1]; %>
-            <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button>
+            <input type="button" onclick="window.open('<%= result %>', '_blank');" value="<%= fileName %>" />
+            <!-- <button onclick="window.open('<%= result %>', '_blank');"><%= fileName %></button> -->
             <% }) %>
           </p><br>
           <button id="home">Home</button>
@@ -32,7 +37,12 @@
         </form>
       </div>
       <div class="rightnav"> </div>
-      <div class="footer"> </div>
+      <div class="footer">
+        <p class="footertext">Please report any issues by clicking <a
+            href="mailto:voice_translator@yahoo.com">here</a><br>
+          &copy; Copyright Voice Translator 2020
+        </p>
+      </div>
     </div>
 
     <script>

@@ -22,7 +22,7 @@
   <script src="./utils.js" charset="UTF-8"></script>
 </head>
 
-<body>
+<body onload="document.getElementById('login').focus();">
   <main>
     <div class="parent">
       <div class="header">
@@ -35,7 +35,7 @@
             id="errorEmail"></span>
           <input type="password" placeholder="Enter Password" name="password" id="password" required><span class="error"
             id="errorPassword"></span><br>
-          <a class="forgot" href="/passwordReset">Forgot password?</a><br>
+          <a class="forgot" href="/forgotPassword">Forgot password?</a><br>
           <button>Log in</button>
           <a class="noaccount" href="/signup">Don't have an account? Sign up!</a><br>
           <hr class="divider" />
@@ -55,7 +55,12 @@
         </form>
       </div>
       <div class="rightnav"> </div>
-      <div class="footer"> </div>
+      <div class="footer">
+        <p class="footertext">Please report any issues by clicking <a
+            href="mailto:voice_translator@yahoo.com">here</a><br>
+          &copy; Copyright Voice Translator 2020
+        </p>
+      </div>
     </div>
 
     <script>

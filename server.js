@@ -110,12 +110,24 @@ app.get("/", function (req, res) {
   res.render("login");
 });
 
+app.get("/home", function (req, res) {
+  res.render("home");
+});
+
+app.get("/error", function (req, res) {
+  res.render("error");
+});
+
 app.get("/login", function (req, res) {
   res.render("login");
 });
 
 app.get("/signup", function (req, res) {
-  res.render("signup");
+  res.render("signup", { headerText: "Register" });
+});
+
+app.get("/forgotPassword", function (req, res) {
+  res.render("forgotpassword", { headerText: "Reset password" });
 });
 
 app.get("/passwordReset", function (req, res) {
@@ -143,7 +155,7 @@ app.get("/landing", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
-      res.render("landing");
+      res.render("landing", { errorMessage: "" });
     })
     .catch((error) => {
       logger.info("Could not render landing page due to " + error);
@@ -217,8 +229,13 @@ app.get("/checkstatus", function (req, res) {
     .then(() => {
       logger.info("User " + global.username + " checked the status");
       fetchResultFromDB().then(status => {
-        // replace id of the div tag to display status of files previously submitted by this user
-        res.render('checkstatus', { statusUpdate: status.trim().split("\n") });
+        if (status.includes("No files")) {
+          res.render("landing", { errorMessage: "No files were submitted for translation. Please upload a file by clicking translate button. In case you have just submitted a file, please give it a few minutes" });
+        } else {
+          // replace id of the div tag to display status of files previously submitted by this user
+          console.log("Files returned from DB: " + status);
+          res.render('checkstatus', { statusUpdate: status.trim().split("\n") });
+        }
       })
         .catch(err => {
           console.log("No result returned from DB: " + err.message);
@@ -247,7 +264,9 @@ function fetchResultFromDB() {
       logger.info("Count of records for user " + global.username + " is: " + size);
       if (snap.empty) {
         status = "No files were submitted for translation. Please upload file by clicking translate button";
+        // status = "";
         resolve(status);
+        // res.render("landing", { errorMessage: "No files were submitted for translation. Please upload file by clicking translate button" });
       }
 
       var count = 0;
@@ -468,7 +487,7 @@ app.post("/updatePassword", (req, res) => {
         .catch(function (error) {
           console.log("Error occured during password reset. " + error);
         });
-        res.status(200).send("Password was updated successfully.");
+      res.status(200).send("Password was updated successfully.");
     })
     .catch(function (error) {
       console.log("Error fetching user data: " + error);

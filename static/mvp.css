@@ -255,6 +255,7 @@ a b,
 a em,
 a i,
 a strong,
+input[type="button"],
 button {
   border-radius: var(--border-radius);
   display: block;
@@ -267,12 +268,14 @@ button {
   word-wrap: break-word;
   text-align: center;
   margin-bottom: 20px;
+  white-space: normal;
 }
 
 /* button {
   font-family: var(--font);
 } */
 
+input[type="button"]:hover,
 button:hover {
   cursor: pointer;
   filter: brightness(var(--hover-brightness));
@@ -280,6 +283,7 @@ button:hover {
 
 a b,
 a strong,
+input[type="button"],
 button {
   background-color: var(--color);
   border: 2px solid var(--color);
@@ -391,6 +395,14 @@ button[disabled]:hover {
   display: inline-block;
   position: relative;
   width: 100%;
+}
+
+.footertext {
+  text-align: center;  
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  font-size: 13px; 
 }
 
 /* div {
@@ -513,6 +525,12 @@ table thead th:last-child {
 table thead th:first-child,
 table tr td:first-child {
   text-align: var(--justify-normal);
+}
+
+.noselect {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10+ and Edge */
+  user-select: none; /* Standard syntax */
 }
 
 /* Quotes */

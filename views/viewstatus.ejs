@@ -12,24 +12,6 @@
 
 <body>
   <main>
-    <!-- <div style="text-align:center;">
-      <h1>Voice Translator</h1>
-    </div>
-    <section>
-      <form id="viewstatus" action="/viewstatus" method="get">
-        <div class="buttonHolder">
-          <% if(translatedFile.includes("is currently being processed")) { %>
-            <p><%= translatedFile %></p>
-          <% } else { %>
-            <button onclick="window.open('<%= translatedFile %>', '_blank');">Translated file</button><br>
-          <% } %>
-          <button id="home">Home</button><br><br>
-          <a href="/sessionLogout">Log out</a>
-          <br><br>
-        </div>
-      </form>
-    </section> -->
-
     <div class="parent">
       <div class="header">
         <h1 class="centertext">Voice Translator</h1>
@@ -49,7 +31,12 @@
         </form>
       </div>
       <div class="rightnav"> </div>
-      <div class="footer"> </div>
+      <div class="footer">
+        <p class="footertext">Please report any issues by clicking <a
+            href="mailto:voice_translator@yahoo.com">here</a><br>
+          &copy; Copyright Voice Translator 2020
+        </p>
+      </div>
     </div>
 
     <script>

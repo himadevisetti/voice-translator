@@ -1,15 +1,21 @@
 function signupFormValidation() {
 
   var email = document.getElementById('login');
-  var psw = document.getElementById('password');
-  var pswConfirm = document.getElementById('pswConfirm');
 
   if (validateEmail(email)) {
-    if (validatePsw(psw, 8, 12)) {
-      if (validatePswConfirm(psw, pswConfirm)) {
-        createUser(email, psw);
-      }
-    }
+    createUser(email);
+  }
+
+  return false;
+
+}
+
+function forgotPasswordFormValidation() {
+
+  var email = document.getElementById('login');
+
+  if (validateEmail(email)) {
+    sendPasswordResetEmail(email);
   }
 
   return false;
@@ -100,49 +106,44 @@ function validatePswConfirm(psw, pswConfirm) {
 
 }
 
-function createUser(email, psw) {
-
-  console.log("All fields are valid!");
-  // window.addEventListener("DOMContentLoaded", () => {
-
-  //   document
-  //     .getElementById("signup")
-  //     .addEventListener("click", (event) => {
-  //       event.preventDefault();
-  //       console.log("no more errors");
+function createUser(email) {
 
   const login = email.value;
-  const password = psw.value;
-
-  var csrf_token = getCookie("XSRF-TOKEN");
-  console.log("csrf_token value: " + csrf_token);
+  const password = Math.random().toString(36).slice(-8);
 
   firebase
     .auth()
     .createUserWithEmailAndPassword(login, password)
     .then(({ user }) => {
-      return user.getIdToken().then((idToken) => {
-        return fetch("/sessionLogin", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "CSRF-Token": csrf_token,
-          },
-          body: JSON.stringify({ idToken, login }),
+      user.sendEmailVerification()
+        .then(function () {
+          // Email sent.
+          window.location.assign("/home");
+        }).catch(function (error) {
+          // An error happened.
+          console.log("An email could not be sent due to an error " + JSON.stringify(error));
         });
-      });
-    })
-    .then(() => {
-      return firebase.auth().signOut();
-    })
-    .then(() => {
-      window.location.assign("/landing");
     });
+
   return false;
-  //     });
-  // });
-  // return false;
+
+}
+
+function sendPasswordResetEmail(email) {
+
+  const login = email.value;
+
+  firebase
+    .auth()
+    .sendPasswordResetEmail(login).then(function () {
+      // Email sent.
+      window.location.assign("/home");
+    }).catch(function (error) {
+      // An error happened.
+      console.log("An email could not be sent due to an error " + JSON.stringify(error));
+    });
+
+  return false;
 
 }
 

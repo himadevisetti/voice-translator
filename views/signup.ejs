@@ -23,19 +23,21 @@
       <div class="leftnav"> </div>
       <div class="maincontent">
         <form id="signupForm" onsubmit="return signupFormValidation()" method="post">
-          <h2 class="centertext">Register</h2>
+          <h2 class="centertext"><%= headerText %></h2>
           <input type="text" placeholder="Enter Email" name="login" id="login" required><span class="error"
             id="errorEmail"></span>
-          <input type="password" placeholder="Enter Password" name="password" id="password" required><span class="error"
-            id="errorPassword"></span>
-          <input type="password" placeholder="Confirm Password" name="pswConfirm" id="pswConfirm" required><span
-            class="error" id="errorConfirmPsw"></span><br>
+          <br>
           <button id="signup">Sign up</button>
           <p class="centertext">Already have an account? <a href="/login">Sign in</a>.</p>
         </form>
       </div>
       <div class="rightnav"> </div>
-      <div class="footer"> </div>
+      <div class="footer">
+        <p class="footertext">Please report any issues by clicking <a
+            href="mailto:voice_translator@yahoo.com">here</a><br>
+          &copy; Copyright Voice Translator 2020
+        </p>
+      </div>
     </div>
   </main>
 </body>

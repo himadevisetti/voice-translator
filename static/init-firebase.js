@@ -6,7 +6,7 @@ const firebaseConfig = {
     projectId: "teak-mantis-279104",
     storageBucket: "teak-mantis-279104.appspot.com",
     messagingSenderId: "753356494760",
-    appId: "1:753356494760:web:4d9b1a01650fe5f1f1af9d"
+    appId: "1:753356494760:web:aa010cec6094c6b0f1af9d"
 };
 
 // Initialize Firebase
