@@ -194,14 +194,14 @@ app.get("/viewstatus", function (req, res) {
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
       console.log("Output file name is: " + outBlob);
 
-      // publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+      // publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
       // console.log("publicOutputUrl: " + publicOutputUrl);
 
       var publicOutputUrl = "";
       checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
         console.log("File processing completed?: " + fileAvailable);
         if (fileAvailable === true) {
-          publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+          publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
           console.log("publicOutputUrl: " + publicOutputUrl);
         } else {
           publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
@@ -279,7 +279,7 @@ function fetchResultFromDB() {
         const translatedFileAvailable = checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
           count++;
           if (fileAvailable === true) {
-            const publicOutputUrl = `https://storage.cloud.google.com/${outBucket.name}/${outBlob}`;
+            const publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
             status += "\n" + publicOutputUrl;
           } else {
             status += "\n" + fileName + " hasn't been processed for some reason. Please check after a few minutes";
@@ -313,7 +313,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       global.inFile = `${blob.name}`;
 
       // The public URL can be used to directly access the file via HTTP.
-      const publicUrl = `https://storage.cloud.google.com/${bucket.name}/${blob.name}`;
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
 
       if (!req.file) {
         res.status(400).send("No file uploaded.");
