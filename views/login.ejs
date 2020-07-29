@@ -4,10 +4,10 @@
 <head profile="http://www.w3.org/2005/10/profile">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-signin-client_id"
+  <!-- <meta name="google-signin-client_id"
     content="753356494760-74fh1dbi0tpkkifv1vee1v7u00jbf341.apps.googleusercontent.com">
   <meta name="google-signin-cookiepolicy" content="single_host_origin">
-  <meta name="google-signin-scope" content="profile email">
+  <meta name="google-signin-scope" content="profile email"> -->
   <title>Log in page</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="./mvp.css" />
@@ -16,7 +16,8 @@
   <!-- <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css"> -->
   <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
-  <script src="https://apis.google.com/js/platform.js"></script>
+  <!-- <script src="https://apis.google.com/js/platform.js"></script> -->
+  <script src="https://apis.google.com/js/api:client.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script src="./init-firebase.js"></script>
   <script src="./utils.js" charset="UTF-8"></script>
@@ -44,14 +45,16 @@
             <i class="fa fa-google fa-fw"></i>
             Sign in with Google
           </a> -->
-          <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
+          <!-- <div id="googleSignIn" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
+          </div> -->
+          <div class="centered">
+            <div id="customGoogleBtn" class="customGPlusSignIn">
+              <span class="icon"></span>
+              <!-- <span class="buttonText">Sign in with Google</span> -->
+            </div>
           </div>
-          <!-- <div id="customGoogleBtn" data-onsuccess="onSignIn" data-theme="dark" data-longtitle="true">
-            <span class="icon"></span>
-            <span class="buttonText">Sign in with Google</span>
-          </div>
-          <div id="name"></div>
-          <script>onSignIn();</script> -->
+          <div id="name" class="centertext"></div>
+          <script>googleSignIn();</script>
         </form>
       </div>
       <div class="rightnav"> </div>
