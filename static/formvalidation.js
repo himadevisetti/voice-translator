@@ -234,9 +234,9 @@ function validateFileSize(file) {
 
   var fileSize = file.files[0].size;
   const size = Math.round((fileSize / 1024));
-  if (size > 10240) {
-    // alert("File too big, please upload a file less than 10MB.");
-    errorFile.innerHTML = "File too big, please upload a file less than 10MB.";
+  if (size > 102400) {
+    // alert("File too big, please upload a file less than 100MB.");
+    errorFile.innerHTML = "File too big, please upload a file less than 100MB.";
     file.focus();
     return false;
   }
@@ -246,6 +246,9 @@ function validateFileSize(file) {
 }
 
 function uploadForm(formData) {
+
+  showLoading("#loadingIcon");
+  document.getElementById('upload').disabled = true;
 
   var xhr = new XMLHttpRequest();
   xhr.open('post', '/upload', true);
@@ -276,3 +279,15 @@ function uploadForm(formData) {
   return false;
 
 }
+
+var insertHtml = function (selector, html) {
+  var targetElem = document.querySelector(selector);
+  targetElem.innerHTML = html;
+};
+
+// Show loading icon inside element identified by 'selector'.
+var showLoading = function (selector) {
+  var html = "<div class='centertext'>";
+  html += "<img src='./ajax-loader.gif'></div>";
+  insertHtml(selector, html);
+};

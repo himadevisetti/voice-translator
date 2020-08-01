@@ -22,6 +22,7 @@
       <div class="maincontent">
         <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data"
           onsubmit="return uploadFormValidation()">
+          <div id="loadingIcon" class="centered"></div>
           <label for="srclang">From Language:</label>
           <select id="srclang" name="srclang" class="required">
           </select>

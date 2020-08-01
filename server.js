@@ -84,7 +84,7 @@ const multer = Multer({
     }
   }),
   limits: {
-    fileSize: 10 * 1024 * 1024 // no larger than 10mb, change as needed
+    fileSize: 100 * 1024 * 1024 // no larger than 100mb, change as needed
   }
 });
 
@@ -282,7 +282,7 @@ function fetchResultFromDB() {
             const publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
             status += "\n" + publicOutputUrl;
           } else {
-            status += "\n" + fileName + " hasn't been processed for some reason. Please check after a few minutes";
+            status += "\n" + fileName + " has not been processed for some reason. Please check after a few minutes";
           }
           if (count === size) {
             resolve(status);
@@ -308,114 +308,54 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
     .then(() => {
       // 10 minutes timeout just for POST to upload endpoint
       req.socket.setTimeout(10 * 60 * 1000);
-      // Create a new blob in the bucket and upload the file data.
-      blob = bucket.file(req.file.originalname);
-      global.inFile = `${blob.name}`;
 
-      // The public URL can be used to directly access the file via HTTP.
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+      const fileExt = path.extname(req.file.path);
+      console.log("Mime type: " + req.file.mimetype);
+      console.log("Original file name: " + req.file.originalname);
+      console.log("file extension: " + fileExt);
 
-      if (!req.file) {
-        res.status(400).send("No file uploaded.");
-        return;
+      var allowedFileType = ['.amr', '.3ga', '.3gp', '.3g2', '.awb', '.flac', '.wav', '.raw', '.opus', '.ogg', '.oga', '.spx'];
+
+      var blob = "";
+      var mimetype = "";
+      if (allowedFileType.includes(fileExt)) {
+        console.log("This file does not need to be transcoded");
+        // Create a new blob in the bucket and upload the file data.
+        blob = bucket.file(req.file.originalname);
+        mimetype = req.file.mimetype;
+        originalFilePath = req.file.path;
+        soxUtils.uploadProcess(req, res, bucket, blob, mimetype, originalFilePath, firestore);
+      } else {
+        console.log("This file needs to be transcoded");
+        const outputFileDirName = path.dirname(req.file.path);
+        const outputFileNameOldExt = path.basename(req.file.path);
+        const oldExt = path.extname(outputFileNameOldExt);
+        const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
+        const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
+        console.log("Transcoded File Name: " + transcodedFileName);
+
+        // var message = "";
+
+        const ffmpeg = require('fluent-ffmpeg');
+
+        ffmpeg(req.file.path)
+          .toFormat('flac')
+          // .outputOption([
+          //   '-c:a flac',
+          //   '-sample_fmt s16'
+          // ])
+          .on('end', () => {
+            console.log("Transcoded the uploaded file to flac format");
+            blob = bucket.file(transcodedFileName);
+            mimetype = "audio/x-flac";
+            soxUtils.uploadProcess(req, res, bucket, blob, mimetype, transcodedFilePath, firestore);
+          })
+          .on('error', (error) => {
+            console.log("Transcoding failed fue to: " + error.message);
+          })
+          .save(transcodedFilePath);
+
       }
-
-      // Make sure to set the contentType metadata for the browser to be able
-      // to render the file instead of downloading the file (default behavior)
-      const blobStream = blob.createWriteStream({
-        metadata: {
-          contentType: req.file.mimetype
-        }
-      });
-
-      blobStream.on("error", err => {
-        next(err);
-        return;
-      });
-
-      blobStream.on("finish", () => {
-        // The public URL can be used to directly access the file via HTTP.
-        // const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-        blob.makePublic();
-      });
-
-      fs.readFile(req.file.path, (err, data) => {
-        if (err) {
-          logger.info("Error while reading the uploaded file: " + err);
-          throw err;
-        }
-        blobStream.end(data);
-      });
-
-      var collection;
-      var document;
-
-      soxUtils.getMetadata(req, function (data) {
-
-        var err = JSON.stringify(data).includes("sampling rate was not specified");
-
-        // Obtain a document reference.
-        collection = firestore.collection('userdata');
-        document = collection.doc();
-
-        async function writeToFirestore() {
-
-          // Enter new data into the document.
-          await document.set({
-            user_name: global.username,
-            source_language: req.body.srclang,
-            target_language: req.body.tgtlang,
-            bucket_name: `${bucket.name}`,
-            file_name: req.file.originalname,
-            public_url: `${publicUrl}`,
-            metadata: data,
-            created: new Date()
-          });
-        }
-
-        async function writeToFirestoreNoHeader() {
-
-          // Enter new data into the document.
-          await document.set({
-            user_name: global.username,
-            source_language: req.body.srclang,
-            target_language: req.body.tgtlang,
-            bucket_name: `${bucket.name}`,
-            file_name: req.file.originalname,
-            public_url: `${publicUrl}`,
-            created: new Date()
-          });
-        }
-
-        if (err) {
-          writeToFirestoreNoHeader().catch(console.error);
-        } else {
-          writeToFirestore().catch(console.error);
-        }
-
-        var response = {
-          source_language: req.body.srclang,
-          target_language: req.body.tgtlang,
-          bucket_name: `${bucket.name}`,
-          file_name: req.file.originalname,
-          public_url: `${publicUrl}`,
-          document_id: `${document.id}`
-        };
-        console.log("Source Language: " + response.source_language);
-        console.log("Target Language: " + response.target_language);
-        console.log("Bucket Name: " + response.bucket_name);
-        console.log("File Name: " + response.file_name);
-        console.log("Public Url: " + response.public_url);
-        console.log('Document Id:', response.document_id);
-        logger.info("User " + global.username + " has uploaded " + global.inFile + " and firestore document_id is: " + response.document_id);
-      });
-
-      response = {
-        source_language: req.body.srclang,
-        target_language: req.body.tgtlang,
-        message: "Your file is being processed"
-      };
-      res.status(200).send(JSON.stringify(response));
     })
     .catch((error) => {
       console.log("From upload endpoint " + error);
