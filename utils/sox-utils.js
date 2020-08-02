@@ -1,6 +1,4 @@
-// const sox = require("sox");
 const ffmpeg = require('fluent-ffmpeg');
-// const util = require("util");
 const path = require("path");
 const fs = require("fs-extra");
 const util = require("util");
@@ -28,35 +26,6 @@ function getMetadata(filepath, callback) {
         }
     });
 }
-
-// function transcodeFile(req, callback) {
-//     var filepath = path.join(__dirname, "../", req.file.path);
-//     const outputFileDirName = path.dirname(req.file.path);
-//     const outputFileNameOldExt = path.basename(req.file.path);
-//     const oldExt = path.extname(outputFileNameOldExt);
-//     const outputFileNameNewExt = path.basename(outputFileNameOldExt, oldExt) + '.flac';
-//     const transcodedFileName = outputFileDirName + path.sep + outputFileNameNewExt;
-//     console.log("Transcoded File Name from soxUtils: " + transcodedFileName);
-
-//     var message = "";
-
-//     ffmpeg(filepath)
-//         .toFormat('flac')
-//         .on('end', () => {
-//             console.log("Transcoded the uploaded file to flac format");
-//             // message = outputFileNameNewExt;
-//             callback(outputFileNameNewExt);
-//         })
-//         .on('error', (error) => {
-//             console.log("Transcoding failed fue to: " + error.message);
-//             // message = "Transcoding failed fue to: " + error.message;
-//             callback(error.message);
-//         })
-//         .save(transcodedFileName);
-
-//     // callback(message);
-
-// }
 
 function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
 
@@ -173,5 +142,4 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
 }
 
 module.exports.getMetadata = getMetadata;
-// module.exports.transcodeFile = transcodeFile;
 module.exports.uploadProcess = uploadProcess;

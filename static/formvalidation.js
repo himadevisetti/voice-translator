@@ -160,7 +160,6 @@ function resetPassword(email, psw) {
   const password = psw.value;
 
   var csrf_token = getCookie("XSRF-TOKEN");
-  console.log("csrf_token value: " + csrf_token);
 
   return fetch("/updatePassword", {
     method: "POST",

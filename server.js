@@ -6,12 +6,10 @@ const admin = require("firebase-admin");
 const Multer = require("multer");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
-const firebase = require("firebase");
 const fs = require("fs-extra");
-const sox = require("sox");
-const util = require("util");
 const logger = require("./utils/logger.js");
 const soxUtils = require("./utils/sox-utils.js");
+const ffmpeg = require('fluent-ffmpeg');
 
 // Add the Firebase products
 require("firebase/firestore");
@@ -57,16 +55,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(csrfMiddleware);
-
-// Multer is required to process file uploads and make them available via
-// req.files.
-// const multer = Multer({
-//   // storage: Multer.memoryStorage()
-//   storage: Multer.memoryStorage(),
-//   limits: {
-//     fileSize: 10 * 1024 * 1024 // no larger than 10mb, change as needed
-//   }
-// });
 
 const multer = Multer({
   // storage: Multer.memoryStorage()
@@ -134,20 +122,6 @@ app.get("/passwordReset", function (req, res) {
   res.render("passwordreset");
 });
 
-// app.get("/home", function (req, res) {
-//   const sessionCookie = req.cookies.session || "";
-
-//   admin
-//     .auth()
-//     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
-//     .then(() => {
-//       res.render("home");
-//     })
-//     .catch((error) => {
-//       res.redirect("/login");
-//     });
-// });
-
 app.get("/landing", function (req, res) {
   const sessionCookie = req.cookies.session || "";
 
@@ -193,9 +167,6 @@ app.get("/viewstatus", function (req, res) {
       // download fileName
       const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
       console.log("Output file name is: " + outBlob);
-
-      // publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
-      // console.log("publicOutputUrl: " + publicOutputUrl);
 
       var publicOutputUrl = "";
       checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
@@ -310,22 +281,24 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       req.socket.setTimeout(10 * 60 * 1000);
 
       const fileExt = path.extname(req.file.path);
-      console.log("Mime type: " + req.file.mimetype);
-      console.log("Original file name: " + req.file.originalname);
-      console.log("file extension: " + fileExt);
 
-      var allowedFileType = ['.amr', '.3ga', '.3gp', '.3g2', '.awb', '.flac', '.wav', '.raw', '.opus', '.ogg', '.oga', '.spx'];
+      var allowedFileTypes = ['.amr', '.3ga', '.3gp', '.3g2', '.awb', '.flac', '.wav', '.raw', '.opus', '.ogg', '.oga', '.spx'];
 
       var blob = "";
       var mimetype = "";
-      if (allowedFileType.includes(fileExt)) {
+
+      if (allowedFileTypes.includes(fileExt)) {
+
         console.log("This file does not need to be transcoded");
+        logger.info("This file does not need to be transcoded");
         // Create a new blob in the bucket and upload the file data.
         blob = bucket.file(req.file.originalname);
         mimetype = req.file.mimetype;
         originalFilePath = req.file.path;
         soxUtils.uploadProcess(req, res, bucket, blob, mimetype, originalFilePath, firestore);
+
       } else {
+
         console.log("This file needs to be transcoded");
         const outputFileDirName = path.dirname(req.file.path);
         const outputFileNameOldExt = path.basename(req.file.path);
@@ -333,19 +306,12 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
         const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
         console.log("Transcoded File Name: " + transcodedFileName);
-
-        // var message = "";
-
-        const ffmpeg = require('fluent-ffmpeg');
+        logger.info("Transcoded File Name: " + transcodedFileName);
 
         ffmpeg(req.file.path)
           .toFormat('flac')
-          // .outputOption([
-          //   '-c:a flac',
-          //   '-sample_fmt s16'
-          // ])
           .on('end', () => {
-            console.log("Transcoded the uploaded file to flac format");
+            console.log("Completed transcoding process");
             blob = bucket.file(transcodedFileName);
             mimetype = "audio/x-flac";
             soxUtils.uploadProcess(req, res, bucket, blob, mimetype, transcodedFilePath, firestore);
@@ -415,8 +381,7 @@ app.post("/updatePassword", (req, res) => {
 
       var uid = userRecord.uid;
       // See the UserRecord reference doc for the contents of userRecord.
-      console.log('Successfully fetched user data: ' + uid);
-      // var user = admin.auth().getUser(uid);
+      // console.log('Successfully fetched user data: ' + uid);
 
       admin.auth().updateUser(uid, {
         password: pwd,
