@@ -42,7 +42,7 @@ admin.initializeApp({
 
 const csrfMiddleware = csrf({ cookie: true });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const app = express();
 
 // app.engine("html", require("ejs").renderFile);
@@ -360,7 +360,7 @@ app.get("/sessionLogout", (req, res) => {
 });
 
 var server = app.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
 
 const io = require('socket.io')(server);
@@ -461,3 +461,54 @@ function wait(timeout) {
     }, timeout);
   });
 }
+
+app.get("/deleteuploads", function (req, res) {
+
+  if (req.get('X-Appengine-Cron') === 'true' || global.username === 'voice_translator@yahoo.com') {
+
+    logger.info("This user or process is authorized to perform this action");
+
+    // Get today's date
+    const today = new Date();
+
+    // Get yesterday's date
+    var yesterday = new Date(today); // Today!
+    yesterday.setDate(yesterday.getDate() - 1); // Yesterday! Sun Aug 02 2020
+    yesterday = yesterday.toDateString().split(' '); // ["Sun","Aug","02","2020"]
+    yesterday = yesterday[2] + yesterday[1] + yesterday[3]; // 02Aug2020
+
+    // Get day before yesterday's date
+    var daybefore = new Date(today); // Today!
+    daybefore.setDate(daybefore.getDate() - 2); // DayBeforeYesterday! Sat Aug 01 2020
+    daybefore = daybefore.toDateString().split(' '); // ["Sat","Aug","01","2020"]
+    daybefore = daybefore[2] + daybefore[1] + daybefore[3]; // 01Aug2020
+
+    // Declare and initialize variables to hold directory names
+    var latestuploads = path.join(__dirname, "/uploads_" + yesterday);
+    var previousuploads = path.join(__dirname, "/uploads_" + daybefore);
+    var currentuploads = path.join(__dirname, "/uploads");
+
+    const desiredMode = 0o2775;
+
+    // Create an uploads directory to backup yesterday's uploads
+    fs.ensureDirSync(latestuploads, desiredMode);
+
+    // Backup all the files from uploads directory to yesterday's uploads directory
+    fs.copySync(currentuploads, latestuploads);
+
+    // Empty current directory
+    fs.emptyDirSync(currentuploads);
+
+    // Delete day before yesterday's directory
+    fs.removeSync(previousuploads);
+
+    // Send success response
+    res.status(200).send("Uploads folder has been cleaned up!");
+
+  } else {
+
+    logger.info("This user or process is not authorized to perform this action");
+    res.status(401).send("This user or process is not authorized to perform this action");
+
+  }
+});

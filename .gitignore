@@ -19,14 +19,18 @@
 .env.production.local
 
 npm-debug.log*
-**/.gcloudignore
+# **/.gcloudignore
 .vscode
 **/*.log
 docs/
 out/
+logs/
 *key.json
 *.lock
 **/package-lock.json
+cron.yaml
+app.yaml
 
 # folder where user files are uploaded
 uploads/
+uploads_*/
