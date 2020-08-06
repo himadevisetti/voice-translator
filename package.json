@@ -10,7 +10,9 @@
   "repository": "https://github.com/himadevisetti/voice-translator",
   "license": "",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@google-cloud/firestore": "^3.8.5",
+    "@google-cloud/logging-winston": "^4.0.0",
     "@google-cloud/storage": "^5.0.1",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",

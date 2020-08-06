@@ -5,8 +5,9 @@ const util = require("util");
 const logger = require("./logger.js");
 
 function getMetadata(filepath, callback) {
-    var relativefilepath = path.join(__dirname, "../", filepath);
-    ffmpeg.ffprobe(relativefilepath, function (err, metadata) {
+    // var relativefilepath = path.join(__dirname, "../", filepath);
+    // ffmpeg.ffprobe(relativefilepath, function (err, metadata) {
+    ffmpeg.ffprobe(filepath, function (err, metadata) {
         if (err) {
             // console.log(err);
             callback(err);

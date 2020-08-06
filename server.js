@@ -10,6 +10,7 @@ const fs = require("fs-extra");
 const logger = require("./utils/logger.js");
 const soxUtils = require("./utils/sox-utils.js");
 const ffmpeg = require('fluent-ffmpeg');
+const os = require("os");
 
 // Add the Firebase products
 require("firebase/firestore");
@@ -56,12 +57,15 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(csrfMiddleware);
 
+var tempDir = os.tmpdir();
+console.log("Temp directory location on the host " + os.hostname() + " is: " + tempDir);
+
 const multer = Multer({
   // storage: Multer.memoryStorage()
   storage: Multer.diskStorage({
     destination: function (req, file, cb) {
-      var filepath = 'uploads/';
-      fs.mkdirsSync(filepath);
+      var filepath = tempDir;
+      // fs.mkdirsSync(filepath);
       cb(null, filepath);
     },
 
@@ -295,6 +299,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         blob = bucket.file(req.file.originalname);
         mimetype = req.file.mimetype;
         originalFilePath = req.file.path;
+        console.log("originalFilePath is: " + originalFilePath);
         soxUtils.uploadProcess(req, res, bucket, blob, mimetype, originalFilePath, firestore);
 
       } else {
@@ -305,6 +310,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         const oldExt = path.extname(outputFileNameOldExt);
         const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
         const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
+        console.log("transcodedFilePath is: " + transcodedFilePath);
         console.log("Transcoded File Name: " + transcodedFileName);
         logger.info("Transcoded File Name: " + transcodedFileName);
 
