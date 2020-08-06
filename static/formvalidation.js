@@ -233,9 +233,9 @@ function validateFileSize(file) {
 
   var fileSize = file.files[0].size;
   const size = Math.round((fileSize / 1024));
-  if (size > 102400) {
+  if (size > 1024000) {
     // alert("File too big, please upload a file less than 100MB.");
-    errorFile.innerHTML = "File too big, please upload a file less than 100MB.";
+    errorFile.innerHTML = "File too big, please upload a file less than 1GB.";
     file.focus();
     return false;
   }

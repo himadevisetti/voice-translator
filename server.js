@@ -76,7 +76,7 @@ const multer = Multer({
     }
   }),
   limits: {
-    fileSize: 100 * 1024 * 1024 // no larger than 100mb, change as needed
+    fileSize: 1000 * 1024 * 1024 // no larger than 1gb, change as needed
   }
 });
 
