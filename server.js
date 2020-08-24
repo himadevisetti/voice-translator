@@ -42,6 +42,20 @@ admin.initializeApp({
 });
 
 const csrfMiddleware = csrf({ cookie: true });
+var csrfEnabled = true;
+
+var customCsrf = function (req, res, next) {
+  var whiteList = new Array("/ios-upload", "/ios-checkstatus");
+  if (whiteList.indexOf(req.path) != -1) {
+    csrfEnabled = false;
+  }
+
+  if (csrfEnabled) {
+    csrfMiddleware(req, res, next);
+  } else {
+    next();
+  }
+}
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -55,7 +69,8 @@ app.use(express.static("static"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(csrfMiddleware);
+// app.use(csrfMiddleware);
+app.use(customCsrf);
 
 var tempDir = os.tmpdir();
 console.log("Temp directory location on the host " + os.hostname() + " is: " + tempDir);
@@ -93,8 +108,13 @@ global.username;
 global.inFile;
 
 app.all("*", (req, res, next) => {
-  res.cookie("XSRF-TOKEN", req.csrfToken());
-  next();
+  // console.log("CSRF enabled flag: " + csrfEnabled);
+  if (csrfEnabled) {
+    res.cookie("XSRF-TOKEN", req.csrfToken());
+    next();
+  } else {
+    next();
+  }
 });
 
 app.get("/", function (req, res) {
@@ -335,6 +355,64 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
       res.redirect("/login");
     });
 });
+
+
+// Process the file upload and upload to Google Cloud Storage.
+app.post("/ios-upload", multer.single("file"), (req, res, next) => {
+
+  global.username = req.body.username
+  console.log("Logged in as: " + global.username);
+  logger.info("Logged in as: " + global.username);
+
+  req.socket.setTimeout(10 * 60 * 1000);
+
+  const fileExt = path.extname(req.file.path);
+
+  var allowedFileTypes = ['.amr', '.3ga', '.3gp', '.3g2', '.awb', '.flac', '.wav', '.raw', '.opus', '.ogg', '.oga', '.spx'];
+
+  var blob = "";
+  var mimetype = "";
+
+  if (allowedFileTypes.includes(fileExt)) {
+
+    console.log("This file does not need to be transcoded");
+    logger.info("This file does not need to be transcoded");
+    // Create a new blob in the bucket and upload the file data.
+    blob = bucket.file(req.file.originalname);
+    mimetype = req.file.mimetype;
+    originalFilePath = req.file.path;
+    console.log("originalFilePath is: " + originalFilePath);
+    soxUtils.uploadProcess(req, res, bucket, blob, mimetype, originalFilePath, firestore);
+
+  } else {
+
+    console.log("This file needs to be transcoded");
+    const outputFileDirName = path.dirname(req.file.path);
+    const outputFileNameOldExt = path.basename(req.file.path);
+    const oldExt = path.extname(outputFileNameOldExt);
+    const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
+    const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
+    console.log("transcodedFilePath is: " + transcodedFilePath);
+    console.log("Transcoded File Name: " + transcodedFileName);
+    logger.info("Transcoded File Name: " + transcodedFileName);
+
+    ffmpeg(req.file.path)
+      .toFormat('flac')
+      .on('end', () => {
+        console.log("Completed transcoding process");
+        blob = bucket.file(transcodedFileName);
+        mimetype = "audio/x-flac";
+        soxUtils.uploadProcess(req, res, bucket, blob, mimetype, transcodedFilePath, firestore);
+      })
+      .on('error', (error) => {
+        console.log("Transcoding failed fue to: " + error.message);
+      })
+      .save(transcodedFilePath);
+
+  }
+
+});
+
 
 app.post("/sessionLogin", (req, res) => {
   const idToken = req.body.idToken.toString();
