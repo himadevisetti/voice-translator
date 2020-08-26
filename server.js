@@ -45,7 +45,7 @@ const csrfMiddleware = csrf({ cookie: true });
 var csrfEnabled = true;
 
 var customCsrf = function (req, res, next) {
-  var whiteList = new Array("/ios-upload", "/ios-checkstatus");
+  var whiteList = new Array("/ios-upload", "/ios-viewstatus", "/ios-checkstatus");
   if (whiteList.indexOf(req.path) != -1) {
     csrfEnabled = false;
   }
@@ -216,6 +216,33 @@ app.get("/viewstatus", function (req, res) {
     });
 });
 
+app.get("/ios-viewstatus", function (req, res) {
+  global.username = req.query.username;
+  console.log("Logged in as: " + global.username);
+  global.inFile = req.query.filename;
+  console.log("File name uploaded for processing: " + global.inFile);
+  logger.info("User " + global.username + " uploaded the file " + global.inFile);
+  // 2 minutes timeout just for GET to viewstatus endpoint
+  req.socket.setTimeout(2 * 60 * 1000);
+  // download bucket
+  const outBucketName = `${outBucket.name}`;
+  // download fileName
+  const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+  console.log("Output file name is: " + outBlob);
+
+  var publicOutputUrl = "";
+  checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
+    console.log("File processing completed?: " + fileAvailable);
+    if (fileAvailable === true) {
+      publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
+      console.log("publicOutputUrl: " + publicOutputUrl);
+    } else {
+      publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
+    }
+    res.status(200).send(JSON.stringify(publicOutputUrl));
+  })
+});
+
 app.get("/checkstatus", function (req, res) {
   const sessionCookie = req.cookies.session || "";
   admin
@@ -244,6 +271,29 @@ app.get("/checkstatus", function (req, res) {
       logger.info("Could not render checkstatus page due to " + error);
       res.redirect("/login");
     });
+});
+
+app.get("/ios-checkstatus", function (req, res) {
+  global.username = req.query.username;
+  console.log("Logged in as: " + global.username);
+  logger.info("User " + global.username + " checked the status");
+  var filesReturned = "";
+  fetchResultFromDB().then(status => {
+    if (status.includes("No files")) {
+      filesReturned = "No files were submitted for translation. Please upload a file by clicking translate button. In case you have just submitted a file, please give it a few minutes";
+    } else {
+      // status of upto 5 files previously submitted by this user each one on a new line
+      console.log("Files returned from DB: " + status);
+      filesReturned = status.trim().split("\n");
+    }
+    res.status(200).send(JSON.stringify(filesReturned));
+  })
+    .catch(err => {
+      filesReturned = "No result returned from DB: " + err.message;
+      console.log("No result returned from DB: " + err.message);
+      logger.info("No result returned from DB: " + err.message);
+      return err;
+    })
 });
 
 function fetchResultFromDB() {
@@ -360,7 +410,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 // Process the file upload and upload to Google Cloud Storage.
 app.post("/ios-upload", multer.single("file"), (req, res, next) => {
 
-  global.username = req.body.username
+  global.username = req.body.username;
   console.log("Logged in as: " + global.username);
   logger.info("Logged in as: " + global.username);
 
