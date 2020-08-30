@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const util = require("util");
 const logger = require("./logger.js");
+const { resolve } = require('path');
 
 function getMetadata(filepath, callback) {
     // var relativefilepath = path.join(__dirname, "../", filepath);
@@ -78,8 +79,36 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
 
         // Obtain a document reference.
         collection = firestore.collection('userdata');
-        document = collection.doc();
         var fileName = path.basename(filepath);
+        var docRef; 
+
+        async function checkIfFileExists() {
+
+            // Check if the user has previously uploaded a file with the same name
+            docRef = await collection.where('user_name', '==', global.username).where('file_name', '==', fileName).get();
+
+            // If the user has not previously uploaded a file with this name, create a new document
+            if (docRef.empty) {
+                document = collection.doc();
+                console.log("Created new document with id: " + document.id);
+                logger.info("Created new document with id: " + document.id);
+            } else {
+                // If the user has previously uploaded a file with this name, overwrite the existing document
+                docRef.forEach((doc) => {                   
+                    document = doc.ref; 
+                    console.log("Overwritten document with id: " + document.id);
+                    logger.info("Overwritten document with id: " + document.id);
+                });
+            }
+
+            if (Object.entries(data).length === 0) {
+                writeToFirestoreNoHeader().catch(console.error);
+            } else {
+                writeToFirestore().catch(console.error);
+            }
+        }      
+
+        checkIfFileExists().catch(console.error);      
 
         async function writeToFirestore() {
 
@@ -110,27 +139,20 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
             });
         }
 
-        if (Object.entries(data).length === 0) {
-            writeToFirestoreNoHeader().catch(console.error);
-        } else {
-            writeToFirestore().catch(console.error);
-        }
-
         var response = {
             source_language: req.body.srclang,
             target_language: req.body.tgtlang,
             bucket_name: `${bucket.name}`,
             file_name: req.file.originalname,
             public_url: `${publicUrl}`,
-            document_id: `${document.id}`
+            // document_id: `${document.id}`
         };
         console.log("Source Language: " + response.source_language);
         console.log("Target Language: " + response.target_language);
         console.log("Bucket Name: " + response.bucket_name);
         console.log("File Name: " + response.file_name);
         console.log("Public Url: " + response.public_url);
-        console.log('Document Id:', response.document_id);
-        logger.info("User " + global.username + " has uploaded " + global.inFile + " and firestore document_id is: " + response.document_id);
+        logger.info("User " + global.username + " has uploaded " + global.inFile);
     });
 
     response = {
