@@ -304,7 +304,7 @@ function fetchResultFromDB() {
     const collection = firestore.collection('userdata');
     var status = "";
     // query the collection to fetch upto 5 files previously submitted by this user
-    collection.where('user_name', '==', `${global.username}`).limit(5).get().then(snap => {
+    collection.where('user_name', '==', `${global.username}`).orderBy('created', 'desc').limit(5).get().then(snap => {
       size = snap.size;
       logger.info("Count of records for user " + global.username + " is: " + size);
       if (snap.empty) {

@@ -30,6 +30,7 @@ logs/
 **/package-lock.json
 cron.yaml
 app.yaml
+app.flexible.yaml
 
 # folder where user files are uploaded
 uploads/
