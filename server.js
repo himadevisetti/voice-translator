@@ -566,12 +566,13 @@ async function waitForFile(bucketName, fileName) {
   while (fileExists === false && retryCount < MAX_RETRIES) {
     retryCount++;
     console.log("Waiting for file");
-    for (let i = 0; i <= MAX_RETRIES; i++) {
-      await wait(10000);
-    }
+    // for (let i = 0; i <= MAX_RETRIES; i++) {
+    //   await wait(1000);
+    // }
+    await wait(1000);
     fileReady = googleCloudStorage.bucket(bucketName).file(fileName);
     fileReady.exists().then((fileProcessed) => {
-      console.log("File processing completed: " + fileProcessed[0]);
+      // console.log("File processing completed: " + fileProcessed[0]);
       logger.info("File processing completed: " + fileProcessed[0]);
       fileExists = fileProcessed[0];
     })
