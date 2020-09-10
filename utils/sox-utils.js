@@ -80,6 +80,10 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
         // Obtain a document reference.
         collection = firestore.collection('userdata');
         var fileName = path.basename(filepath);
+        // Remove file extension and store it so it could be used for deletion from firestore
+        var fileExt = path.extname(fileName);
+        var fileNameNoExt = path.basename(fileName, fileExt)
+
         var docRef; 
 
         async function checkIfFileExists() {
@@ -119,6 +123,7 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
                 target_language: req.body.tgtlang,
                 bucket_name: `${bucket.name}`,
                 file_name: fileName,
+                base_file_name: fileNameNoExt, 
                 public_url: `${publicUrl}`,
                 metadata: metadata,
                 created: new Date()
@@ -134,6 +139,7 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
                 target_language: req.body.tgtlang,
                 bucket_name: `${bucket.name}`,
                 file_name: fileName,
+                base_file_name: fileNameNoExt, 
                 public_url: `${publicUrl}`,
                 created: new Date()
             });

@@ -45,7 +45,7 @@ const csrfMiddleware = csrf({ cookie: true });
 var csrfEnabled = true;
 
 var customCsrf = function (req, res, next) {
-  var whiteList = new Array("/ios-upload", "/ios-viewstatus", "/ios-checkstatus");
+  var whiteList = new Array("/ios-upload", "/ios-viewstatus", "/ios-checkstatus", "/ios-deletefile");
   if (whiteList.indexOf(req.path) != -1) {
     csrfEnabled = false;
   }
@@ -189,7 +189,8 @@ app.get("/viewstatus", function (req, res) {
       // download bucket
       const outBucketName = `${outBucket.name}`;
       // download fileName
-      const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+      // const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+      const outBlob = path.parse(global.inFile).name + ".mp3";
       console.log("Output file name is: " + outBlob);
 
       var publicOutputUrl = "";
@@ -227,7 +228,8 @@ app.get("/ios-viewstatus", function (req, res) {
   // download bucket
   const outBucketName = `${outBucket.name}`;
   // download fileName
-  const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+  // const outBlob = "Translated_" + path.parse(global.inFile).name + ".mp3";
+  const outBlob = path.parse(global.inFile).name + ".mp3";
   console.log("Output file name is: " + outBlob);
 
   var publicOutputUrl = "";
@@ -320,14 +322,17 @@ function fetchResultFromDB() {
         const fileName = doc.data().file_name;
         logger.info(`${global.username}` + " previously submitted file: " + fileName);
         // download fileName
-        const outBlob = "Translated_" + path.parse(fileName).name + ".mp3";
+        // const outBlob = "Translated_" + path.parse(fileName).name + ".mp3";
+        const outBlob = path.parse(fileName).name + ".mp3";
         const translatedFileAvailable = checkFileProcessingStatus(outBucketName, outBlob).then(fileAvailable => {
           count++;
           if (fileAvailable === true) {
             const publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
             status += "\n" + publicOutputUrl;
           } else {
-            status += "\n" + fileName + " has not been processed for some reason. Please check after a few minutes";
+            const fileExt = path.extname(fileName);
+            const fileNameNoExt = path.basename(fileName, fileExt)  
+            status += "\n" + fileNameNoExt + " is still under processing. Please check after a few minutes";
           }
           if (count === size) {
             resolve(status);
@@ -342,6 +347,62 @@ function fetchResultFromDB() {
       })
   })
 }
+
+app.delete("/ios-deletefile", function (req, res) {
+
+  const userName = req.query.username;
+
+  // Input urlString is in the format https://storage.cloud.google.com/cool_place/commercial_stereo.mp3 
+  const urlString = req.query.urlstring;
+  const urlArray = urlString.split("/");
+  const urlArrayLength = urlArray.length;
+  const fileName = urlArray[urlArrayLength - 1];
+  const bucketName = urlArray[urlArrayLength - 2];
+
+  console.log("File " + fileName + " will be deleted from the bucket " + bucketName + " for user " + userName);
+  logger.info("File " + fileName + " will be deleted from the bucket " + bucketName + " for user " + userName);
+
+  // Remove file extension as it could be stored with a different extension in firestore; Use this only for firestore query below
+  const fileExt = path.extname(fileName);
+  const fileNameNoExt = path.basename(fileName, fileExt)
+
+  async function deleteFile() {
+
+    // Delete file from the bucket
+    await googleCloudStorage.bucket(bucketName).file(fileName).delete();
+    console.log(`gs://${bucketName}/${fileName} deleted.`);
+
+    // Delete record from firestore
+    const collection = firestore.collection('userdata');
+    // var deleteQuery = collection.where('base_file_name', '==', fileNameNoExt).where('bucket_name', '==', bucketName).where('user_name', '==', userName);
+    var deleteQuery = collection.where('base_file_name', '==', fileNameNoExt).where('user_name', '==', userName);
+    
+    deleteQuery.get().then((querySnapshot) => {
+      logger.info(`Received query snapshot of size ${querySnapshot.size}`);
+      querySnapshot.forEach((doc) => {
+        doc.ref.delete().then(() => {
+          console.log("Document successfully deleted!");
+        }).catch(function(error) {
+          console.error("Error removing document: " + error);
+        });
+      });
+    })
+    .catch(function(error) {
+      console.log("Error getting documents: ", error);
+    });
+
+  }
+
+  const success = deleteFile().catch(console.error);
+  console.log("Delete call response: " + require("util").inspect(success));
+
+  if (success) {
+    res.status(204).end();
+  } else {
+    res.status(404).end();
+  }
+
+});
 
 // Process the file upload and upload to Google Cloud Storage.
 app.post("/upload", multer.single("file"), (req, res, next) => {

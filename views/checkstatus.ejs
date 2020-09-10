@@ -22,7 +22,7 @@
           <h4 class="centertext">Status of your previously submitted files</h4>
           <p id="status">
             <!-- result is a list of URLs each one on a new line with the following format -->
-            <!-- https://storage.cloud.google.com/cool_place/Translated_commercial_stereo.mp3 -->
+            <!-- https://storage.cloud.google.com/cool_place/commercial_stereo.mp3 -->
             <% statusUpdate.forEach(result => { %>
               <!-- seems like one or more files were not processed yet -->
               <% if(result.includes("has not been processed")) { %>
