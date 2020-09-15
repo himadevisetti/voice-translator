@@ -45,8 +45,11 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
     // to render the file instead of downloading the file (default behavior)
     const blobStream = blob.createWriteStream({
         metadata: {
-            contentType: mimetype
-        }
+            contentType: mimetype,
+            metadata: {
+                userName: global.username
+            }
+        },
     });
 
     blobStream.on("error", err => {
