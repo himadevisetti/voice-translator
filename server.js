@@ -45,6 +45,7 @@ const csrfMiddleware = csrf({ cookie: true });
 var csrfEnabled = true;
 
 var customCsrf = function (req, res, next) {
+  // Whitelist ios APIs so as to bypass CSRF validation
   var whiteList = new Array("/ios-upload", "/ios-viewstatus", "/ios-checkstatus", "/ios-deletefile");
   if (whiteList.indexOf(req.path) != -1) {
     csrfEnabled = false;
@@ -73,14 +74,15 @@ app.use(cookieParser());
 app.use(customCsrf);
 
 var tempDir = os.tmpdir();
-console.log("Temp directory location on the host " + os.hostname() + " is: " + tempDir);
+var tempUploadDir = tempDir + '/uploads';
+console.log("Temp directory location on the host " + os.hostname() + " is: " + tempUploadDir);
 
 const multer = Multer({
   // storage: Multer.memoryStorage()
   storage: Multer.diskStorage({
     destination: function (req, file, cb) {
-      var filepath = tempDir;
-      // fs.mkdirsSync(filepath);
+      var filepath = tempUploadDir;
+      fs.mkdirsSync(filepath);
       cb(null, filepath);
     },
 
@@ -182,7 +184,7 @@ app.get("/viewstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
-      console.log("File name uploaded for processing: " + global.inFile);
+   // console.log("File name uploaded for processing: " + global.inFile);
       logger.info("User " + global.username + " uploaded the file " + global.inFile);
       // 2 minutes timeout just for GET to viewstatus endpoint
       req.socket.setTimeout(2 * 60 * 1000);
@@ -221,7 +223,7 @@ app.get("/ios-viewstatus", function (req, res) {
   global.username = req.query.username;
   console.log("Logged in as: " + global.username);
   global.inFile = req.query.filename;
-  console.log("File name uploaded for processing: " + global.inFile);
+  // console.log("File name uploaded for processing: " + global.inFile);
   logger.info("User " + global.username + " uploaded the file " + global.inFile);
   // 2 minutes timeout just for GET to viewstatus endpoint
   req.socket.setTimeout(2 * 60 * 1000);
@@ -262,7 +264,7 @@ app.get("/checkstatus", function (req, res) {
         }
       })
         .catch(err => {
-          console.log("No result returned from DB: " + err.message);
+       // console.log("No result returned from DB: " + err.message);
           logger.info("No result returned from DB: " + err.message);
           return err;
         })
@@ -292,7 +294,7 @@ app.get("/ios-checkstatus", function (req, res) {
   })
     .catch(err => {
       filesReturned = "No result returned from DB: " + err.message;
-      console.log("No result returned from DB: " + err.message);
+   // console.log("No result returned from DB: " + err.message);
       logger.info("No result returned from DB: " + err.message);
       return err;
     })
@@ -341,7 +343,7 @@ function fetchResultFromDB() {
       });
     })
       .catch(err => {
-        console.log("DB Error: " + err.message);
+     // console.log("DB Error: " + err.message);
         logger.info("DB Error: " + err.message);
         reject(err);
       })
@@ -359,7 +361,7 @@ app.delete("/ios-deletefile", function (req, res) {
   const fileName = urlArray[urlArrayLength - 1];
   const bucketName = urlArray[urlArrayLength - 2];
 
-  console.log("File " + fileName + " will be deleted from the bucket " + bucketName + " for user " + userName);
+  // console.log("File " + fileName + " will be deleted from the bucket " + bucketName + " for user " + userName);
   logger.info("File " + fileName + " will be deleted from the bucket " + bucketName + " for user " + userName);
 
   // Remove file extension as it could be stored with a different extension in firestore; Use this only for firestore query below
@@ -394,7 +396,6 @@ app.delete("/ios-deletefile", function (req, res) {
   }
 
   const success = deleteFile().catch(console.error);
-  console.log("Delete call response: " + require("util").inspect(success));
 
   if (success) {
     res.status(204).end();
@@ -424,7 +425,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 
       if (allowedFileTypes.includes(fileExt)) {
 
-        console.log("This file does not need to be transcoded");
+     // console.log("This file does not need to be transcoded");
         logger.info("This file does not need to be transcoded");
         // Create a new blob in the bucket and upload the file data.
         blob = bucket.file(req.file.originalname);
@@ -441,8 +442,8 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         const oldExt = path.extname(outputFileNameOldExt);
         const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
         const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
-        console.log("transcodedFilePath is: " + transcodedFilePath);
-        console.log("Transcoded File Name: " + transcodedFileName);
+     // console.log("transcodedFilePath is: " + transcodedFilePath);
+     // console.log("Transcoded File Name: " + transcodedFileName);
         logger.info("Transcoded File Name: " + transcodedFileName);
 
         ffmpeg(req.file.path)
@@ -472,7 +473,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 app.post("/ios-upload", multer.single("file"), (req, res, next) => {
 
   global.username = req.body.username;
-  console.log("Logged in as: " + global.username);
+  // console.log("Logged in as: " + global.username);
   logger.info("Logged in as: " + global.username);
 
   req.socket.setTimeout(10 * 60 * 1000);
@@ -486,7 +487,7 @@ app.post("/ios-upload", multer.single("file"), (req, res, next) => {
 
   if (allowedFileTypes.includes(fileExt)) {
 
-    console.log("This file does not need to be transcoded");
+    // console.log("This file does not need to be transcoded");
     logger.info("This file does not need to be transcoded");
     // Create a new blob in the bucket and upload the file data.
     blob = bucket.file(req.file.originalname);
@@ -503,8 +504,8 @@ app.post("/ios-upload", multer.single("file"), (req, res, next) => {
     const oldExt = path.extname(outputFileNameOldExt);
     const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
     const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
-    console.log("transcodedFilePath is: " + transcodedFilePath);
-    console.log("Transcoded File Name: " + transcodedFileName);
+    // console.log("transcodedFilePath is: " + transcodedFilePath);
+    // console.log("Transcoded File Name: " + transcodedFileName);
     logger.info("Transcoded File Name: " + transcodedFileName);
 
     ffmpeg(req.file.path)
@@ -528,7 +529,7 @@ app.post("/ios-upload", multer.single("file"), (req, res, next) => {
 app.post("/sessionLogin", (req, res) => {
   const idToken = req.body.idToken.toString();
   global.username = req.body.login.toString();
-  console.log("Logged in as: " + global.username);
+  // console.log("Logged in as: " + global.username);
   logger.info("Logged in as: " + global.username);
 
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
@@ -567,7 +568,7 @@ io.on('connection', (socketServer) => {
 
 app.post("/updatePassword", (req, res) => {
   global.username = req.body.login.toString();
-  console.log("Logged in as: " + global.username);
+  // console.log("Logged in as: " + global.username);
   logger.info("Logged in as: " + global.username);
   const pwd = req.body.password.toString();
 
@@ -610,7 +611,7 @@ function checkFileProcessingStatus(bucketName, fileName) {
         }
       })
       .catch(err => {
-        console.log("File cannot be accessed: " + err.message);
+     // console.log("File cannot be accessed: " + err.message);
         logger.info("File cannot be accessed: " + err.message);
         reject(err);
       })
@@ -638,7 +639,7 @@ async function waitForFile(bucketName, fileName) {
       fileExists = fileProcessed[0];
     })
       .catch(err => {
-        console.log("File could not be processed: " + err.message);
+     // console.log("File could not be processed: " + err.message);
         logger.info("File could not be processed: " + err.message);
         return err;
       })
@@ -657,6 +658,42 @@ function wait(timeout) {
     }, timeout);
   });
 }
+
+// Delete files in /tmp folder on the host that are older than 1 hour
+app.get("/deleteuploadshourly", function (req, res) {
+
+  if (req.get('X-Appengine-Cron') === 'true' || global.username === 'voice_translator@yahoo.com') {
+
+    logger.info("This user or process is authorized to perform this action");
+
+    var uploadsDir = os.tmpdir() + '/uploads';
+    logger.info("Uploads directory: " + uploadsDir);
+
+    // List files in a directory. Delete this code after a few iterations
+    fs.readdir(uploadsDir, function(err, files) {
+      if (err) {
+        console.log("Error getting directory information " + err);
+      } else {
+        files.forEach(function(file) {
+          console.log(file);
+        })
+      }
+    });
+
+    // Delete files older than 1 hour
+    var findRemoveSync = require('find-remove');
+    findRemoveSync(uploadsDir, { files: '*.*', age: { seconds: 3600 } });
+
+    // Send success response
+    res.status(200).send("Uploads folder has been cleaned up!");
+
+  } else {
+
+    logger.info("This user or process is not authorized to perform this action");
+    res.status(401).send("This user or process is not authorized to perform this action");
+
+  }
+});
 
 app.get("/deleteuploads", function (req, res) {
 

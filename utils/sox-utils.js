@@ -97,13 +97,13 @@ function uploadProcess(req, res, bucket, blob, mimetype, filepath, firestore) {
             // If the user has not previously uploaded a file with this name, create a new document
             if (docRef.empty) {
                 document = collection.doc();
-                console.log("Created new document with id: " + document.id);
+             // console.log("Created new document with id: " + document.id);
                 logger.info("Created new document with id: " + document.id);
             } else {
                 // If the user has previously uploaded a file with this name, overwrite the existing document
                 docRef.forEach((doc) => {                   
                     document = doc.ref; 
-                    console.log("Overwritten document with id: " + document.id);
+                 // console.log("Overwritten document with id: " + document.id);
                     logger.info("Overwritten document with id: " + document.id);
                 });
             }
