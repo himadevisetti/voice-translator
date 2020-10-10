@@ -241,7 +241,7 @@ app.get("/ios-viewstatus", function (req, res) {
       publicOutputUrl = `https://storage.googleapis.com/${outBucket.name}/${outBlob}`;
       console.log("publicOutputUrl: " + publicOutputUrl);
     } else {
-      publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Home screen";
+      publicOutputUrl = "Your file is currently being processed. Please check status after a few minutes from Profile page";
     }
     res.status(200).send(JSON.stringify(publicOutputUrl));
   })
@@ -667,7 +667,7 @@ app.get("/deleteuploadshourly", function (req, res) {
     logger.info("This user or process is authorized to perform this action");
 
     var uploadsDir = os.tmpdir() + '/uploads';
-    logger.info("Uploads directory: " + uploadsDir);
+    // logger.info("Uploads directory: " + uploadsDir);
 
     // List files in a directory. Delete this code after a few iterations
     fs.readdir(uploadsDir, function(err, files) {
@@ -693,6 +693,70 @@ app.get("/deleteuploadshourly", function (req, res) {
     res.status(401).send("This user or process is not authorized to perform this action");
 
   }
+});
+
+function deleteAnonymousUsers(nextPageToken) {
+
+  // Anonymous users are used for token generation
+  // Tokens expire in 8 hours
+  // Delete anonymous users created before 9 hours (cutoff time)
+  const timeNowinMillis = Date.now();
+  const cutoffTime = Math.floor(timeNowinMillis/1000) - (9 * 60 * 60);
+  // console.log(cutoffTime);
+
+  admin
+     .auth()
+     .listUsers(20, nextPageToken)
+     .then(function(listUsersResult) {
+       listUsersResult.users.forEach(function(userRecord) {
+
+         var creationTime = userRecord.metadata.creationTime;
+         var creationTimeUnixTime = Math.floor(new Date(creationTime).getTime()/1000);
+         //  console.log(creationTimeUnixTime);
+
+         // provider data is empty for anonymous users
+         if (userRecord.providerData.length === 0 && creationTimeUnixTime < cutoffTime) {
+          // console.log(userRecord); // do the delete here
+          admin.auth().deleteUser(userRecord.uid)
+             .then(function() {
+                 console.log("Successfully deleted user: ", userRecord.uid);
+             })
+             .catch(function(error) {
+                 console.log("Error deleting user: ", error);
+             });
+         }
+       });
+       if (listUsersResult.pageToken) {
+         // List next batch of users.
+         deleteAnonymousUsers(listUsersResult.pageToken);
+       }
+     })
+     .catch(function(error) {
+       console.log('Error listing users:', error);
+       logger.info('Error listing users:', error);
+     });
+ }
+
+// Delete anonymous users used for token generation
+app.get("/deletetokenusers", function (req, res) {
+
+  if (req.get('X-Appengine-Cron') === 'true' || global.username === 'voice_translator@yahoo.com') {
+
+    logger.info("This user or process is authorized to perform this action");
+    deleteAnonymousUsers();
+
+    // Send success response
+    res.status(200).send("Anonymous users were deleted successfully!");
+
+  } else {
+
+    logger.info("This user or process is not authorized to perform this action");
+
+    // Send error response
+    res.status(401).send("This user or process is not authorized to perform this action");
+
+  }
+
 });
 
 app.get("/deleteuploads", function (req, res) {
