@@ -184,7 +184,7 @@ app.get("/viewstatus", function (req, res) {
     .auth()
     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
     .then(() => {
-   // console.log("File name uploaded for processing: " + global.inFile);
+      // console.log("File name uploaded for processing: " + global.inFile);
       logger.info("User " + global.username + " uploaded the file " + global.inFile);
       // 2 minutes timeout just for GET to viewstatus endpoint
       req.socket.setTimeout(2 * 60 * 1000);
@@ -264,7 +264,7 @@ app.get("/checkstatus", function (req, res) {
         }
       })
         .catch(err => {
-       // console.log("No result returned from DB: " + err.message);
+          // console.log("No result returned from DB: " + err.message);
           logger.info("No result returned from DB: " + err.message);
           return err;
         })
@@ -294,7 +294,7 @@ app.get("/ios-checkstatus", function (req, res) {
   })
     .catch(err => {
       filesReturned = "No result returned from DB: " + err.message;
-   // console.log("No result returned from DB: " + err.message);
+      // console.log("No result returned from DB: " + err.message);
       logger.info("No result returned from DB: " + err.message);
       return err;
     })
@@ -333,7 +333,7 @@ function fetchResultFromDB() {
             status += "\n" + publicOutputUrl;
           } else {
             const fileExt = path.extname(fileName);
-            const fileNameNoExt = path.basename(fileName, fileExt)  
+            const fileNameNoExt = path.basename(fileName, fileExt)
             status += "\n" + fileNameNoExt + " is still under processing. Please check after a few minutes";
           }
           if (count === size) {
@@ -343,7 +343,7 @@ function fetchResultFromDB() {
       });
     })
       .catch(err => {
-     // console.log("DB Error: " + err.message);
+        // console.log("DB Error: " + err.message);
         logger.info("DB Error: " + err.message);
         reject(err);
       })
@@ -378,20 +378,20 @@ app.delete("/ios-deletefile", function (req, res) {
     const collection = firestore.collection('userdata');
     // var deleteQuery = collection.where('base_file_name', '==', fileNameNoExt).where('bucket_name', '==', bucketName).where('user_name', '==', userName);
     var deleteQuery = collection.where('base_file_name', '==', fileNameNoExt).where('user_name', '==', userName);
-    
+
     deleteQuery.get().then((querySnapshot) => {
       logger.info(`Received query snapshot of size ${querySnapshot.size}`);
       querySnapshot.forEach((doc) => {
         doc.ref.delete().then(() => {
           console.log("Document successfully deleted!");
-        }).catch(function(error) {
+        }).catch(function (error) {
           console.error("Error removing document: " + error);
         });
       });
     })
-    .catch(function(error) {
-      console.log("Error getting documents: ", error);
-    });
+      .catch(function (error) {
+        console.log("Error getting documents: ", error);
+      });
 
   }
 
@@ -425,7 +425,7 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
 
       if (allowedFileTypes.includes(fileExt)) {
 
-     // console.log("This file does not need to be transcoded");
+        // console.log("This file does not need to be transcoded");
         logger.info("This file does not need to be transcoded");
         // Create a new blob in the bucket and upload the file data.
         blob = bucket.file(req.file.originalname);
@@ -442,8 +442,8 @@ app.post("/upload", multer.single("file"), (req, res, next) => {
         const oldExt = path.extname(outputFileNameOldExt);
         const transcodedFileName = path.basename(outputFileNameOldExt, oldExt) + '.flac';
         const transcodedFilePath = outputFileDirName + path.sep + transcodedFileName;
-     // console.log("transcodedFilePath is: " + transcodedFilePath);
-     // console.log("Transcoded File Name: " + transcodedFileName);
+        // console.log("transcodedFilePath is: " + transcodedFilePath);
+        // console.log("Transcoded File Name: " + transcodedFileName);
         logger.info("Transcoded File Name: " + transcodedFileName);
 
         ffmpeg(req.file.path)
@@ -611,7 +611,7 @@ function checkFileProcessingStatus(bucketName, fileName) {
         }
       })
       .catch(err => {
-     // console.log("File cannot be accessed: " + err.message);
+        // console.log("File cannot be accessed: " + err.message);
         logger.info("File cannot be accessed: " + err.message);
         reject(err);
       })
@@ -639,7 +639,7 @@ async function waitForFile(bucketName, fileName) {
       fileExists = fileProcessed[0];
     })
       .catch(err => {
-     // console.log("File could not be processed: " + err.message);
+        // console.log("File could not be processed: " + err.message);
         logger.info("File could not be processed: " + err.message);
         return err;
       })
@@ -670,11 +670,11 @@ app.get("/deleteuploadshourly", function (req, res) {
     // logger.info("Uploads directory: " + uploadsDir);
 
     // List files in a directory. Delete this code after a few iterations
-    fs.readdir(uploadsDir, function(err, files) {
+    fs.readdir(uploadsDir, function (err, files) {
       if (err) {
         console.log("Error getting directory information " + err);
       } else {
-        files.forEach(function(file) {
+        files.forEach(function (file) {
           console.log(file);
         })
       }
@@ -701,41 +701,41 @@ function deleteAnonymousUsers(nextPageToken) {
   // Tokens expire in 8 hours
   // Delete anonymous users created before 9 hours (cutoff time)
   const timeNowinMillis = Date.now();
-  const cutoffTime = Math.floor(timeNowinMillis/1000) - (9 * 60 * 60);
+  const cutoffTime = Math.floor(timeNowinMillis / 1000) - (9 * 60 * 60);
   // console.log(cutoffTime);
 
   admin
-     .auth()
-     .listUsers(20, nextPageToken)
-     .then(function(listUsersResult) {
-       listUsersResult.users.forEach(function(userRecord) {
+    .auth()
+    .listUsers(20, nextPageToken)
+    .then(function (listUsersResult) {
+      listUsersResult.users.forEach(function (userRecord) {
 
-         var creationTime = userRecord.metadata.creationTime;
-         var creationTimeUnixTime = Math.floor(new Date(creationTime).getTime()/1000);
-         //  console.log(creationTimeUnixTime);
+        var creationTime = userRecord.metadata.creationTime;
+        var creationTimeUnixTime = Math.floor(new Date(creationTime).getTime() / 1000);
+        //  console.log(creationTimeUnixTime);
 
-         // provider data is empty for anonymous users
-         if (userRecord.providerData.length === 0 && creationTimeUnixTime < cutoffTime) {
+        // provider data is empty for anonymous users
+        if (userRecord.providerData.length === 0 && creationTimeUnixTime < cutoffTime) {
           // console.log(userRecord); // do the delete here
           admin.auth().deleteUser(userRecord.uid)
-             .then(function() {
-                 console.log("Successfully deleted user: ", userRecord.uid);
-             })
-             .catch(function(error) {
-                 console.log("Error deleting user: ", error);
-             });
-         }
-       });
-       if (listUsersResult.pageToken) {
-         // List next batch of users.
-         deleteAnonymousUsers(listUsersResult.pageToken);
-       }
-     })
-     .catch(function(error) {
-       console.log('Error listing users:', error);
-       logger.info('Error listing users:', error);
-     });
- }
+            .then(function () {
+              console.log("Successfully deleted user: ", userRecord.uid);
+            })
+            .catch(function (error) {
+              console.log("Error deleting user: ", error);
+            });
+        }
+      });
+      if (listUsersResult.pageToken) {
+        // List next batch of users.
+        deleteAnonymousUsers(listUsersResult.pageToken);
+      }
+    })
+    .catch(function (error) {
+      console.log('Error listing users:', error);
+      logger.info('Error listing users:', error);
+    });
+}
 
 // Delete anonymous users used for token generation
 app.get("/deletetokenusers", function (req, res) {
@@ -808,4 +808,15 @@ app.get("/deleteuploads", function (req, res) {
     res.status(401).send("This user or process is not authorized to perform this action");
 
   }
+});
+
+// Get users count
+app.get("/getuserscount", function (req, res) {
+
+  firestore.collection('users').get().then(snap => {
+    userCount = snap.size // will return the collection size
+    // Send success response
+    res.status(200).send("Current users count: " + userCount);
+  });
+
 });
